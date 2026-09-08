@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Minimalist Launcher</string>
+    <string name="accessibility_service_description">Permite a Minimalist Launcher bloquear la pantalla y desplegar las notificaciones mediante gestos táctiles.</string>
+</resources>
