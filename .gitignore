@@ -18,3 +18,7 @@ local.properties
 debug.keystore
 .antigravity/
 .vscode/
+
+*.keystore
+*.jks
+google-services.json
