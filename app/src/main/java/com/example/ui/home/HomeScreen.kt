@@ -20,12 +20,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.Close
@@ -62,6 +65,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,8 +75,7 @@ import com.example.LauncherViewModel
 import com.example.ui.home.HomeScreenElementsConfig
 import com.example.ui.home.HomeScreenElementsDialog
 import com.example.ui.settings.SettingsDialog
-import com.example.ui.theme.LauncherTheme
-import com.example.ui.theme.ThemeMode
+import com.example.ui.theme.*
 import com.example.ui.widget.HomeWidgetsSection
 import com.example.ui.widget.WidgetManagerDialog
 import kotlinx.coroutines.delay
@@ -115,6 +118,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
     var showElementsDialog by remember { mutableStateOf(false) }
     var showGesturesDialog by remember { mutableStateOf(false) }
     var isStandbyLockActive by remember { mutableStateOf(false) }
+    var selectedBottomTab by remember { mutableIntStateOf(0) }
 
     val accent = state.accentTheme
     val solar = state.solarTimes
@@ -319,298 +323,474 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             )
         }
 
-        // Main Screen Content
+        // Main Screen Content: Aetheric Minimalist Layout with Fixed Bottom Navigation Bar
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .statusBarsPadding()
         ) {
-            // Top Section: Clock, Date, Status, Solar Indicator, Widgets, & Header Controls
+            // Scrollable / Proportional Body
             Column(
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Column {
-                        if (elemConfig.showClock) {
-                            ClockWidget(textColor = primaryTextColor, textShadow = textShadow)
-                        }
-                        if (elemConfig.showDate) {
-                            DateWidget(textColor = secondaryTextColor, textShadow = textShadow)
-                        }
-                        
-                        // Solar & Eye Strain Quick Badge
-                        if (elemConfig.showSolarBadge && state.themeMode == ThemeMode.AUTO_SUNSET_SUNRISE) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (state.isDarkThemeActive) accent.primary.copy(alpha = 0.2f) else colors.surfaceVariant,
-                                modifier = Modifier
-                                    .padding(top = 6.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { showSettingsDialog = true }
-                                    .testTag("badge_solar_status")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = if (state.isDarkThemeActive) Icons.Default.Nightlight else Icons.Default.WbSunny,
-                                        contentDescription = null,
-                                        tint = if (state.isDarkThemeActive) Color(0xFFFFD54F) else accent.primary,
-                                        modifier = Modifier.size(11.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (state.isDarkThemeActive) "Sunset Mode (${solar.sunsetFormatted})" else "Daylight Mode (${solar.sunriseFormatted})",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (state.isDarkThemeActive) Color(0xFFFFE082) else accent.primary
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Single Discreet Launcher Settings Access
-                    if (elemConfig.showHeaderActions) {
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = accent.container.copy(alpha = 0.85f),
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .clickable { showSettingsDialog = true }
-                                    .testTag("btn_settings_menu")
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Settings,
-                                        contentDescription = "Launcher Settings",
-                                        tint = accent.primary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-
-                            // AI / Focus status indicator
-                            if (state.isAiCategorizing) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(accent.container)
-                                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(10.dp),
-                                        strokeWidth = 2.dp,
-                                        color = accent.primary
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "GEMINI AI",
-                                        color = accent.primary,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp
-                                    )
-                                }
-                            } else if (state.isZeroDistractions) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable { viewModel.toggleZeroDistractions() }
-                                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .background(accent.primary, CircleShape)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "FOCUS",
-                                        color = colors.textMuted,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.5.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Pinned Home Screen Widgets (Weather, Calendar, Focus, Battery)
-                if (elemConfig.showWidgets && state.activeWidgets.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HomeWidgetsSection(
-                        viewModel = viewModel,
-                        onOpenWidgetManager = { showWidgetManagerDialog = true }
-                    )
-                }
-            }
-
-            // Middle Section: 'Most Used' Section based on launch frequency
-            if (elemConfig.showMostUsedApps) {
-                val mostUsedApps = state.mostUsedApps
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp)
-                ) {
-                    if (elemConfig.showMostUsedHeader) {
-                        // Section Header
-                        Row(
+                // 1. Top Section: Encabezado superior con estado zen y fecha
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Zen Status Pill
+                        Surface(
+                            shape = RoundedCornerShape(9999.dp),
+                            color = AethericSurfaceLow,
+                            border = BorderStroke(1.dp, AethericSurfaceHigh),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .clip(RoundedCornerShape(9999.dp))
+                                .clickable { showSettingsDialog = true }
+                                .testTag("zen_status_pill")
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                    contentDescription = "Most Used",
-                                    tint = accent.primary,
-                                    modifier = Modifier.size(16.dp)
+                                    imageVector = if (state.isDarkThemeActive) Icons.Default.Nightlight else Icons.Default.WbSunny,
+                                    contentDescription = null,
+                                    tint = if (state.isDarkThemeActive) Color(0xFFFFD54F) else AethericForestSageLight,
+                                    modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "MOST USED",
-                                    color = accent.primary,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.5.sp
+                                    text = if (state.isDarkThemeActive) "21° NOCHE" else "21° DESPEJADO",
+                                    style = AethericTypography.microHint,
+                                    color = AethericTextOffWhite
+                                )
+                                Text(
+                                    text = "•",
+                                    color = AethericTextMutedZinc,
+                                    modifier = Modifier.padding(horizontal = 6.dp),
+                                    fontSize = 11.sp
+                                )
+                                Text(
+                                    text = "84%",
+                                    style = TextStyle(
+                                        fontFamily = JetBrainsMonoFontFamily,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = AethericForestSageLight
+                                    )
                                 )
                             }
-                            Text(
-                                text = "LONG-PRESS FOR OPTIONS",
-                                color = mutedTextColor,
-                                style = TextStyle(shadow = textShadow),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = 0.8.sp
+                        }
+
+                        // Bedtime DND & Settings Action Buttons
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (state.isZeroDistractions) AethericForestSageContainer else AethericSurfaceLow,
+                                border = BorderStroke(1.dp, if (state.isZeroDistractions) AethericForestSageLight else AethericOutline),
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .clickable { viewModel.toggleZeroDistractions() }
+                                    .testTag("btn_zen_focus_toggle")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bedtime,
+                                        contentDescription = "Zero Distractions / Focus",
+                                        tint = if (state.isZeroDistractions) AethericAmberLight else AethericTextStone,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            if (elemConfig.showHeaderActions) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = AethericSurfaceLow,
+                                    border = BorderStroke(1.dp, AethericOutline),
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable { showSettingsDialog = true }
+                                        .testTag("btn_settings_menu")
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Settings,
+                                            contentDescription = "Launcher Settings",
+                                            tint = AethericTextStone,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Reloj en formato ultra grande (18:40) con fuente Mono/Sans y fecha
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        if (elemConfig.showClock) {
+                            ClockWidget(
+                                textColor = primaryTextColor,
+                                textShadow = textShadow
+                            )
+                        }
+                        if (elemConfig.showDate) {
+                            DateWidget(
+                                textColor = AethericTextStone,
+                                textShadow = textShadow
                             )
                         }
                     }
 
-                    if (mostUsedApps.isNotEmpty()) {
+                    // Pinned Home Screen Widgets if enabled
+                    if (elemConfig.showWidgets && state.activeWidgets.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HomeWidgetsSection(
+                            viewModel = viewModel,
+                            onOpenWidgetManager = { showWidgetManagerDialog = true }
+                        )
+                    }
+                }
+
+                // 3. Las 6 aplicaciones favoritas configuradas en lista numerada con ceros a la izquierda (01..06)
+                val favoriteApps = remember(state.mostUsedApps, state.visibleApps) {
+                    val mostUsed = state.mostUsedApps.take(6).toMutableList()
+                    if (mostUsed.size < 6) {
+                        val remaining = state.visibleApps.filter { app ->
+                            mostUsed.none { it.packageName == app.packageName }
+                        }
+                        mostUsed.addAll(remaining.take(6 - mostUsed.size))
+                    }
+                    if (mostUsed.isNotEmpty()) {
+                        mostUsed
+                    } else {
+                        listOf(
+                            AppInfo("Teléfono", "com.google.android.dialer", category = "communication"),
+                            AppInfo("Mensajes", "com.google.android.apps.messaging", category = "communication"),
+                            AppInfo("Cámara", "com.google.android.GoogleCamera", category = "utilities"),
+                            AppInfo("Calendario", "com.google.android.calendar", category = "productivity"),
+                            AppInfo("Ajustes", "com.android.settings", category = "system"),
+                            AppInfo("Galería", "com.google.android.apps.photos", category = "entertainment")
+                        )
+                    }
+                }
+
+                if (elemConfig.showMostUsedApps) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        favoriteApps.take(6).forEachIndexed { index, app ->
+                            HomeAppItem(
+                                app = app,
+                                index = index + 1,
+                                viewModel = viewModel,
+                                context = context,
+                                accentColor = accent.primary,
+                                accentContainer = accent.container,
+                                colors = colors,
+                                textScale = state.appLabelTextScale,
+                                textColor = primaryTextColor,
+                                textShadow = textShadow
+                            )
+                        }
+                    }
+                }
+
+                // 4. Tarjeta flotante inferior de 'Tiempo en Pantalla' con texto reflexivo
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        color = AethericSurfaceLow,
+                        shape = RoundedCornerShape(18.dp),
+                        border = BorderStroke(1.dp, AethericOutline),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable {
+                                try {
+                                    context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    })
+                                } catch (e: Exception) {
+                                    try {
+                                        context.startActivity(Intent(Settings.ACTION_SETTINGS).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        })
+                                    } catch (_: Exception) {}
+                                }
+                            }
+                            .testTag("card_screen_time")
+                    ) {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            mostUsedApps.forEachIndexed { index, app ->
-                                HomeAppItem(
-                                    app = app,
-                                    index = index + 1,
-                                    viewModel = viewModel,
-                                    context = context,
-                                    accentColor = accent.primary,
-                                    accentContainer = accent.container,
-                                    colors = colors,
-                                    textScale = state.appLabelTextScale,
-                                    textColor = primaryTextColor,
-                                    textShadow = textShadow
+                            // Card Header
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Schedule,
+                                        contentDescription = null,
+                                        tint = AethericForestSageLight,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "TIEMPO EN PANTALLA",
+                                        style = AethericTypography.captionCaps,
+                                        color = AethericForestSageLight
+                                    )
+                                }
+                                Text(
+                                    text = "42 MIN",
+                                    style = TextStyle(
+                                        fontFamily = JetBrainsMonoFontFamily,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = AethericTextOffWhite
+                                    )
                                 )
                             }
+
+                            // Progress Bar (4dp height)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(9999.dp))
+                                    .background(AethericSurfaceHighest)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.35f)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(9999.dp))
+                                        .background(AethericForestSageLight)
+                                )
+                            }
+
+                            // Card Footer: Reflective quote and Goal badge
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "“Sé intencional con tu tiempo.”",
+                                    style = TextStyle(
+                                        fontFamily = InterFontFamily,
+                                        fontSize = 12.sp,
+                                        fontStyle = FontStyle.Italic,
+                                        color = AethericTextStone
+                                    )
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = AethericSurfaceHigh
+                                ) {
+                                    Text(
+                                        text = "Objetivo: 2h",
+                                        style = AethericTypography.microHint,
+                                        color = AethericTextStone,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
                         }
-                    } else if (state.isLoading) {
-                        CircularProgressIndicator(
-                            color = accent.primary,
-                            modifier = Modifier.size(28.dp)
-                        )
+                    }
+
+                    // Optional Search Bar trigger if enabled in elements config
+                    if (elemConfig.showSearchBar) {
+                        Surface(
+                            color = AethericSurfaceLow,
+                            shape = RoundedCornerShape(32.dp),
+                            border = BorderStroke(1.dp, AethericOutline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isSheetOpen = true },
+                            shadowElevation = 0.5.dp
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 11.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = AethericTextStone,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Buscar aplicaciones...",
+                                        color = AethericTextMutedZinc,
+                                        style = AethericTypography.bodyRegular.copy(fontSize = 14.sp)
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = AethericForestSageContainer
+                                ) {
+                                    Text(
+                                        text = "DRAWER",
+                                        style = AethericTypography.microHint,
+                                        color = AethericForestSageLight,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            // Bottom Section: Search apps / Intent Pill & Swipe indicator
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
+            // 5. Barra de navegación inferior fija con las 3 pestañas: FOCUS, APPS y WELLBEING
+            Surface(
+                color = AethericOledBlack.copy(alpha = 0.95f),
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(width = 1.dp, color = Color(0xFF1F1F21))
             ) {
-                if (elemConfig.showSearchBar) {
-                    Surface(
-                        color = surfaceVariantBg,
-                        shape = RoundedCornerShape(32.dp),
-                        border = BorderStroke(1.dp, cardBorder),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { isSheetOpen = true },
-                        shadowElevation = if (wpConfig.mode != WallpaperMode.SOLID) 2.dp else 0.5.dp
+                            .padding(horizontal = 28.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        // FOCUS Tab
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    selectedBottomTab = 0
+                                    viewModel.toggleZeroDistractions()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .testTag("tab_focus")
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    tint = secondaryTextColor,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "Search apps & categories...",
-                                    color = mutedTextColor,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
+                            Text(
+                                text = "FOCUS",
+                                style = AethericTypography.captionCaps,
+                                color = if (selectedBottomTab == 0 || state.isZeroDistractions) AethericTextOffWhite else AethericTextStone,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(accent.container)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "AI",
-                                    tint = accent.primary,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "AI",
-                                    color = accent.primary,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                                    .size(4.dp)
+                                    .background(
+                                        if (selectedBottomTab == 0 || state.isZeroDistractions) AethericForestSageLight else Color.Transparent,
+                                        CircleShape
+                                    )
+                            )
+                        }
+
+                        // APPS Tab
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    selectedBottomTab = 1
+                                    isSheetOpen = true
+                                }
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .testTag("tab_apps")
+                        ) {
+                            Text(
+                                text = "APPS",
+                                style = AethericTypography.captionCaps,
+                                color = if (selectedBottomTab == 1 || isSheetOpen) AethericTextOffWhite else AethericTextStone,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(4.dp)
+                                    .background(
+                                        if (selectedBottomTab == 1 || isSheetOpen) AethericForestSageLight else Color.Transparent,
+                                        CircleShape
+                                    )
+                            )
+                        }
+
+                        // WELLBEING Tab
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    selectedBottomTab = 2
+                                    showWidgetManagerDialog = true
+                                }
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .testTag("tab_wellbeing")
+                        ) {
+                            Text(
+                                text = "WELLBEING",
+                                style = AethericTypography.captionCaps,
+                                color = if (selectedBottomTab == 2) AethericTextOffWhite else AethericTextStone,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(4.dp)
+                                    .background(
+                                        if (selectedBottomTab == 2) AethericForestSageLight else Color.Transparent,
+                                        CircleShape
+                                    )
+                            )
                         }
                     }
-                }
-                
-                if (elemConfig.showSwipeUpHint) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    Text(
-                        text = "SWIPE UP FOR ALL APPS",
-                        color = mutedTextColor.copy(alpha = 0.75f),
-                        style = TextStyle(shadow = textShadow),
-                        fontSize = 10.sp,
-                        letterSpacing = 2.sp,
-                        fontWeight = FontWeight.Bold
+
+                    // Home indicator minimal bar
+                    Box(
+                        modifier = Modifier
+                            .width(96.dp)
+                            .height(3.dp)
+                            .clip(CircleShape)
+                            .background(AethericOutlineVariant)
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
             }
         }
@@ -1101,12 +1281,12 @@ fun HomeAppItem(
     onAppClick: ((AppInfo) -> Unit)? = null
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
+    val formattedIndex = String.format(Locale.US, "%02d", index)
 
     Box {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .combinedClickable(
                     role = Role.Button,
@@ -1121,7 +1301,7 @@ fun HomeAppItem(
                         isMenuOpen = true
                     }
                 )
-                .padding(horizontal = 8.dp, vertical = 6.dp)
+                .padding(vertical = 10.dp, horizontal = 4.dp)
                 .testTag("most_used_app_${app.packageName}"),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -1131,61 +1311,57 @@ fun HomeAppItem(
                 modifier = Modifier.weight(1f, fill = false)
             ) {
                 Text(
-                    text = "$index.",
-                    color = accentColor.copy(alpha = 0.6f),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(24.dp)
+                    text = formattedIndex,
+                    style = TextStyle(
+                        fontFamily = JetBrainsMonoFontFamily,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AethericTextStone
+                    ),
+                    modifier = Modifier.width(36.dp)
                 )
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = app.label,
-                    color = textColor,
-                    style = TextStyle(shadow = textShadow),
-                    fontSize = (30 * textScale).sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.8).sp,
+                    style = AethericTypography.headlineHeroMobile.copy(
+                        fontSize = (26 * textScale).sp,
+                        color = textColor,
+                        shadow = textShadow
+                    ),
                     maxLines = 1
                 )
             }
 
+            // Right side badge or subtle arrow indicator (NO commercial app icons)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                if (app.launchCount > 0) {
+                if (index == 2 || (app.category.lowercase() == "communication" && app.launchCount > 0)) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = accentContainer.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(end = 4.dp)
+                        shape = RoundedCornerShape(9999.dp),
+                        color = AethericForestSageContainer,
+                        modifier = Modifier.padding(end = 2.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = "Launches",
-                                tint = accentColor,
-                                modifier = Modifier.size(11.dp)
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = "${app.launchCount}",
-                                color = accentColor,
+                        Text(
+                            text = if (app.launchCount > 1) "${app.launchCount} nuevos" else "1 nuevo",
+                            style = TextStyle(
+                                fontFamily = JetBrainsMonoFontFamily,
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                                fontWeight = FontWeight.Bold,
+                                color = AethericForestSageLight
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
                     }
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Launch,
+                        contentDescription = "Open ${app.label}",
+                        tint = AethericTextMutedZinc,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
-
-                Text(
-                    text = app.category.uppercase(),
-                    color = colors.textMuted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.8.sp
-                )
             }
         }
 
@@ -1512,9 +1688,10 @@ fun AppPopupMenu(
 
 @Composable
 fun ClockWidget(
-    textColor: Color = Color(0xFF1A1C18),
+    textColor: Color = AethericTextOffWhite,
     textShadow: Shadow? = null
 ) {
+    val context = LocalContext.current
     var time by remember { mutableStateOf("") }
     
     LaunchedEffect(Unit) {
@@ -1525,40 +1702,79 @@ fun ClockWidget(
     }
     
     Text(
-        text = time,
+        text = time.ifEmpty { SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()) },
         color = textColor,
-        style = TextStyle(shadow = textShadow),
-        fontSize = 80.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = (-4).sp,
-        lineHeight = 80.sp,
-        modifier = Modifier.testTag("clock_widget")
+        style = AethericTypography.clockDisplay.copy(
+            fontSize = 72.sp,
+            letterSpacing = (-2.5).sp,
+            shadow = textShadow
+        ),
+        modifier = Modifier
+            .clickable {
+                try {
+                    val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    try {
+                        context.startActivity(Intent(Settings.ACTION_DATE_SETTINGS).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        })
+                    } catch (_: Exception) {}
+                }
+            }
+            .testTag("clock_widget")
     )
 }
 
 @Composable
 fun DateWidget(
-    textColor: Color = Color(0xFF43493E),
+    textColor: Color = AethericTextStone,
     textShadow: Shadow? = null
 ) {
+    val context = LocalContext.current
     var dateStr by remember { mutableStateOf("") }
     
     LaunchedEffect(Unit) {
         while (true) {
-            val sdf = SimpleDateFormat("EEEE, MMM d", Locale.getDefault())
-            dateStr = sdf.format(Date())
+            val sdf = SimpleDateFormat("EEEE, d 'de' MMMM", Locale.getDefault())
+            val formatted = sdf.format(Date()).replaceFirstChar { 
+                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() 
+            }
+            dateStr = formatted
             delay(60000)
         }
     }
     
+    val initialDate = remember {
+        val sdf = SimpleDateFormat("EEEE, d 'de' MMMM", Locale.getDefault())
+        sdf.format(Date()).replaceFirstChar { 
+            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() 
+        }
+    }
+
     Text(
-        text = dateStr,
+        text = dateStr.ifEmpty { initialDate },
         color = textColor,
-        style = TextStyle(shadow = textShadow),
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Medium,
+        style = TextStyle(
+            fontFamily = InterFontFamily,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.2.sp,
+            shadow = textShadow
+        ),
         modifier = Modifier
-            .padding(start = 4.dp, top = 4.dp)
+            .padding(start = 2.dp, top = 2.dp)
+            .clickable {
+                try {
+                    val intent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_APP_CALENDAR)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                } catch (_: Exception) {}
+            }
             .testTag("date_widget")
     )
 }

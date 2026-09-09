@@ -101,8 +101,8 @@ data class LauncherState(
         get() = apps.filter { it.packageName !in hiddenPackages }
 
     val mostUsedApps: List<AppInfo>
-        get() = visibleApps.filter { it.launchCount > 0 }.sortedByDescending { it.launchCount }.take(5)
-            .ifEmpty { visibleApps.take(5) }
+        get() = visibleApps.filter { it.launchCount > 0 }.sortedByDescending { it.launchCount }.take(6)
+            .ifEmpty { visibleApps.take(6) }
 
     val activeWidgets: List<PinnedWidgetConfig>
         get() = pinnedWidgets.filter { it.isPinned }.sortedBy { it.order }
