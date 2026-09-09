@@ -16,6 +16,8 @@ import com.example.ui.theme.SolarLocation
 import com.example.ui.theme.SolarScheduleCalculator
 import com.example.ui.theme.SolarTimes
 import com.example.ui.theme.ThemeMode
+import com.example.ui.theme.AethericThemeVariant
+import com.example.ui.theme.AethericFontFamilyChoice
 import com.example.ui.widget.BatterySystemData
 import com.example.ui.widget.CalendarEvent
 import com.example.ui.widget.FocusGoalData
@@ -56,7 +58,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.UUID
+
+data class WellbeingConfig(
+    val isStrictFocusEnabled: Boolean = true,
+    val strictFocusUntil: String = "18:00",
+    val isMindfulPauseEnabled: Boolean = true,
+    val mindfulPauseSeconds: Int = 5,
+    val isAutoGrayscaleEnabled: Boolean = true,
+    val screenTimeTodayMinutes: Int = 78,
+    val screenTimeGoalMinutes: Int = 150,
+    val unlocksTodayCount: Int = 19
+)
 
 data class LauncherState(
     val apps: List<AppInfo> = emptyList(),
@@ -69,6 +81,8 @@ data class LauncherState(
     val aiCategorizationMessage: String? = null,
     val accentTheme: AccentTheme = AccentTheme.ForestSage,
     val themeMode: ThemeMode = ThemeMode.AUTO_SUNSET_SUNRISE,
+    val themeVariant: AethericThemeVariant = AethericThemeVariant.OLED_PURO,
+    val typographyChoice: AethericFontFamilyChoice = AethericFontFamilyChoice.SANS,
     val isDarkThemeActive: Boolean = false,
     val isPureBlack: Boolean = false,
     val isWarmEyeComfort: Boolean = false,
@@ -95,7 +109,8 @@ data class LauncherState(
     val appLabelTextScale: Float = 1.0f,
     val wallpaperConfig: WallpaperConfig = WallpaperConfig(),
     val homeScreenElements: HomeScreenElementsConfig = HomeScreenElementsConfig(),
-    val gesturesConfig: GesturesConfig = GesturesConfig()
+    val gesturesConfig: GesturesConfig = GesturesConfig(),
+    val wellbeingConfig: WellbeingConfig = WellbeingConfig()
 ) {
     val visibleApps: List<AppInfo>
         get() = apps.filter { it.packageName !in hiddenPackages }
@@ -165,6 +180,7 @@ class LauncherViewModel(
         initInitialLaunchStats()
         loadHiddenPackages()
         loadGesturesPreferences()
+        loadWellbeingPreferences()
         appRepository.startObserving()
         observeAppRepository()
         loadApps()
@@ -183,6 +199,20 @@ class LauncherViewModel(
         val isWarmComfort = prefs.getBoolean("theme_warm_comfort", false)
         val locationName = prefs.getString("solar_location_name", SolarLocation.DefaultLocations.first().name)
         val solarLocation = SolarLocation.DefaultLocations.firstOrNull { it.name == locationName } ?: SolarLocation.DefaultLocations.first()
+
+        val variantName = prefs.getString("pref_theme_variant", AethericThemeVariant.OLED_PURO.name)
+        val themeVariant = try {
+            AethericThemeVariant.valueOf(variantName ?: AethericThemeVariant.OLED_PURO.name)
+        } catch (e: Exception) {
+            AethericThemeVariant.OLED_PURO
+        }
+
+        val fontName = prefs.getString("pref_typography_choice", AethericFontFamilyChoice.SANS.name)
+        val typographyChoice = try {
+            AethericFontFamilyChoice.valueOf(fontName ?: AethericFontFamilyChoice.SANS.name)
+        } catch (e: Exception) {
+            AethericFontFamilyChoice.SANS
+        }
 
         val customStartH = prefs.getInt("custom_dark_start_h", 20)
         val customStartM = prefs.getInt("custom_dark_start_m", 0)
@@ -206,8 +236,10 @@ class LauncherViewModel(
         _state.update {
             it.copy(
                 themeMode = themeMode,
+                themeVariant = themeVariant,
+                typographyChoice = typographyChoice,
                 isDarkThemeActive = isDark,
-                isPureBlack = isPureBlack,
+                isPureBlack = isPureBlack || (themeVariant == AethericThemeVariant.OLED_PURO),
                 isWarmEyeComfort = isWarmComfort,
                 selectedSolarLocation = solarLocation,
                 solarTimes = solarTimes,
@@ -1334,5 +1366,73 @@ class LauncherViewModel(
         val defaults = GesturesConfig()
         saveGesturesConfig(defaults)
         _state.update { it.copy(gesturesConfig = defaults) }
+    }
+
+    private fun loadWellbeingPreferences() {
+        val isStrictFocus = prefs.getBoolean("wb_strict_focus", true)
+        val strictUntil = prefs.getString("wb_strict_focus_until", "18:00") ?: "18:00"
+        val isMindfulPause = prefs.getBoolean("wb_mindful_pause", true)
+        val mindfulSeconds = prefs.getInt("wb_mindful_pause_seconds", 5)
+        val isAutoGrayscale = prefs.getBoolean("wb_auto_grayscale", true)
+        val screenTimeMinutes = prefs.getInt("wb_screen_time_mins", 78)
+        val unlocksCount = prefs.getInt("wb_unlocks_count", 19)
+
+        _state.update {
+            it.copy(
+                wellbeingConfig = WellbeingConfig(
+                    isStrictFocusEnabled = isStrictFocus,
+                    strictFocusUntil = strictUntil,
+                    isMindfulPauseEnabled = isMindfulPause,
+                    mindfulPauseSeconds = mindfulSeconds,
+                    isAutoGrayscaleEnabled = isAutoGrayscale,
+                    screenTimeTodayMinutes = screenTimeMinutes,
+                    unlocksTodayCount = unlocksCount
+                )
+            )
+        }
+    }
+
+    fun setThemeVariant(variant: AethericThemeVariant) {
+        prefs.edit().putString("pref_theme_variant", variant.name).apply()
+        _state.update {
+            it.copy(
+                themeVariant = variant,
+                isPureBlack = (variant == AethericThemeVariant.OLED_PURO)
+            )
+        }
+    }
+
+    fun setTypographyChoice(choice: AethericFontFamilyChoice) {
+        prefs.edit().putString("pref_typography_choice", choice.name).apply()
+        _state.update { it.copy(typographyChoice = choice) }
+    }
+
+    fun setMindfulPauseSeconds(seconds: Int) {
+        val clamped = seconds.coerceIn(1, 5)
+        prefs.edit().putInt("wb_mindful_pause_seconds", clamped).apply()
+        _state.update {
+            it.copy(wellbeingConfig = it.wellbeingConfig.copy(mindfulPauseSeconds = clamped))
+        }
+    }
+
+    fun toggleStrictFocus() {
+        val current = _state.value.wellbeingConfig
+        val updated = current.copy(isStrictFocusEnabled = !current.isStrictFocusEnabled)
+        prefs.edit().putBoolean("wb_strict_focus", updated.isStrictFocusEnabled).apply()
+        _state.update { it.copy(wellbeingConfig = updated) }
+    }
+
+    fun toggleMindfulPause() {
+        val current = _state.value.wellbeingConfig
+        val updated = current.copy(isMindfulPauseEnabled = !current.isMindfulPauseEnabled)
+        prefs.edit().putBoolean("wb_mindful_pause", updated.isMindfulPauseEnabled).apply()
+        _state.update { it.copy(wellbeingConfig = updated) }
+    }
+
+    fun toggleAutoGrayscale() {
+        val current = _state.value.wellbeingConfig
+        val updated = current.copy(isAutoGrayscaleEnabled = !current.isAutoGrayscaleEnabled)
+        prefs.edit().putBoolean("wb_auto_grayscale", updated.isAutoGrayscaleEnabled).apply()
+        _state.update { it.copy(wellbeingConfig = updated) }
     }
 }

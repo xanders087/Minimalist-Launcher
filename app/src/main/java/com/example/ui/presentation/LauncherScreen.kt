@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -40,9 +42,11 @@ import com.example.AppInfo
 import com.example.LauncherViewModel
 import com.example.data.model.AppItem
 import com.example.domain.launcher.LaunchResult
+import com.example.ui.theme.*
 
 /**
- * Pantalla de presentación y cajón de búsqueda del Launcher,
+ * Pantalla de presentación y cajón de búsqueda del Launcher según el marco 'Cajón de Aplicaciones' (Stitch).
+ * Agrupa alfabéticamente (A, B, C...) con categoría alineada a la derecha en tipografía muted,
  * optimizada para alcanzar 120 FPS constantes mediante Edge-to-Edge nativo,
  * gestión de insets del teclado (IME), búsqueda con debounce y microinteracciones hápticas.
  */
@@ -62,6 +66,19 @@ fun LauncherScreen(
     val filteredApps by viewModel.debouncedFilteredApps.collectAsState()
 
     val accent = state.accentTheme
+    val backgroundColor = state.themeVariant.backgroundColor
+
+    // Agrupación alfabética de aplicaciones (A, B, C... y '#' para caracteres especiales/números)
+    val groupedApps = remember(filteredApps) {
+        filteredApps
+            .groupBy { app ->
+                val firstChar = app.label.firstOrNull()?.uppercaseChar() ?: '#'
+                if (firstChar in 'A'..'Z') firstChar else '#'
+            }
+            .toSortedMap { a, b ->
+                if (a == '#') 1 else if (b == '#') -1 else a.compareTo(b)
+            }
+    }
 
     // Escucha eventos unidireccionales (One-off UI events)
     LaunchedEffect(Unit) {
@@ -73,7 +90,7 @@ fun LauncherScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F9F2))
+            .background(backgroundColor)
             // 1. Edge-to-Edge: Consumo de la barra de estado superior
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
             .testTag("launcher_screen_root")
@@ -86,7 +103,7 @@ fun LauncherScreen(
                 .imePadding()
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            // Header Minimalista
+            // Header Minimalista (Stitch Aetheric Header)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,16 +113,14 @@ fun LauncherScreen(
             ) {
                 Column {
                     Text(
-                        text = "APLICACIONES",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        color = accent.primary
+                        text = "CAJÓN DE APLICACIONES",
+                        style = AethericTypography.captionCaps,
+                        color = AethericForestSageLight
                     )
                     Text(
-                        text = "${filteredApps.size} disponibles",
-                        fontSize = 12.sp,
-                        color = Color(0xFF74796D)
+                        text = "${filteredApps.size} apps disponibles",
+                        style = AethericTypography.microHint,
+                        color = AethericTextStone
                     )
                 }
 
@@ -113,14 +128,12 @@ fun LauncherScreen(
                 if (filteredApps.any { it.isWorkProfile }) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = accent.container
+                        color = AethericForestSageContainer
                     ) {
                         Text(
-                            text = "MULTI-PERFIL ACTIVO",
-                            color = accent.primary,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp,
+                            text = "MULTI-PERFIL",
+                            color = AethericForestSageLight,
+                            style = AethericTypography.microHint,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -137,15 +150,15 @@ fun LauncherScreen(
                 placeholder = {
                     Text(
                         text = "Buscar por nombre o categoría...",
-                        color = Color(0xFF74796D),
-                        fontSize = 14.sp
+                        color = AethericTextPebble,
+                        style = AethericTypography.bodyRegular.copy(fontSize = 14.sp)
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Buscar",
-                        tint = accent.primary
+                        tint = AethericForestSageLight
                     )
                 },
                 trailingIcon = {
@@ -158,7 +171,7 @@ fun LauncherScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Limpiar búsqueda",
-                                tint = Color(0xFF74796D)
+                                tint = AethericTextStone
                             )
                         }
                     }
@@ -166,10 +179,12 @@ fun LauncherScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = accent.primary,
-                    unfocusedBorderColor = Color(0xFFE1E4D5),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = AethericForestSageLight,
+                    unfocusedBorderColor = AethericOutline,
+                    focusedContainerColor = AethericSurfaceLow,
+                    unfocusedContainerColor = AethericSurfaceLow,
+                    focusedTextColor = AethericTextOffWhite,
+                    unfocusedTextColor = AethericTextOffWhite
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
@@ -177,7 +192,7 @@ fun LauncherScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 2. Lista optimizada a 120 FPS con LazyColumn, keys únicas y contentTypes estables
+            // 2. Lista agrupada alfabéticamente (A, B, C...) optimizada a 120 FPS
             if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
                 Box(
                     modifier = Modifier
@@ -187,8 +202,8 @@ fun LauncherScreen(
                 ) {
                     Text(
                         text = "No se encontraron coincidencias para \"$searchQuery\"",
-                        color = Color(0xFF74796D),
-                        fontSize = 14.sp
+                        color = AethericTextStone,
+                        style = AethericTypography.bodyRegular.copy(fontSize = 14.sp)
                     )
                 }
             } else {
@@ -196,29 +211,56 @@ fun LauncherScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("apps_lazy_column"),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    items(
-                        items = filteredApps,
-                        key = { it.id }, // Clave única y estable que combina paquete y usuario
-                        contentType = { "app_list_item" } // Cache de reciclaje de nodos en Compose
-                    ) { appItem ->
-                        LauncherAppRow(
-                            app = appItem,
-                            accentColor = accent.primary,
-                            onClick = {
-                                val result = viewModel.launchAppWithResult(AppInfo.fromAppItem(appItem))
-                                if (result !is LaunchResult.Success) {
-                                    Toast.makeText(context, "Error al abrir ${appItem.label}", Toast.LENGTH_SHORT).show()
-                                }
-                                onAppSelected?.invoke(appItem)
-                            },
-                            onLongClick = {
-                                // 4. Microinteracción: Feedback háptico sutil al mantener presionado
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    groupedApps.forEach { (letter, appsInLetter) ->
+                        // Encabezado de sección alfabética (A, B, C...)
+                        item(
+                            key = "header_$letter",
+                            contentType = "letter_header"
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 14.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = letter.toString(),
+                                    style = AethericTypography.indexMono,
+                                    color = AethericForestSageLight
+                                )
+                                HorizontalDivider(
+                                    color = AethericSurfaceHigh,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
-                        )
+                        }
+
+                        // Aplicaciones pertenecientes a la letra
+                        items(
+                            items = appsInLetter,
+                            key = { it.id },
+                            contentType = { "app_list_item" }
+                        ) { appItem ->
+                            LauncherAppRow(
+                                app = appItem,
+                                accentColor = AethericForestSageLight,
+                                onClick = {
+                                    val result = viewModel.launchAppWithResult(AppInfo.fromAppItem(appItem))
+                                    if (result !is LaunchResult.Success) {
+                                        Toast.makeText(context, "Error al abrir ${appItem.label}", Toast.LENGTH_SHORT).show()
+                                    }
+                                    onAppSelected?.invoke(appItem)
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -227,7 +269,8 @@ fun LauncherScreen(
 }
 
 /**
- * Renglón de aplicación optimizado para evitar recomposiciones innecesarias.
+ * Renglón de aplicación con categoría alineada a la derecha en tipografía muted
+ * según el sistema Aetheric Minimalist.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -244,7 +287,7 @@ private fun LauncherAppRow(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .combinedClickable(
                     role = Role.Button,
                     onClickLabel = "Abrir ${app.label}",
@@ -256,67 +299,76 @@ private fun LauncherAppRow(
                     }
                 )
                 .testTag("app_row_${app.packageName}"),
-            color = Color.White,
-            shape = RoundedCornerShape(14.dp),
-            shadowElevation = 0.5.dp
+            color = AethericSurfaceLow,
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, AethericOutline.copy(alpha = 0.6f))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 3. Carga asíncrona de icono sin jank en el hilo de Compose
                 AsyncAppIcon(
                     app = app,
-                    size = 40.dp,
+                    size = 38.dp,
                     accentColor = accentColor
                 )
 
                 Spacer(modifier = Modifier.width(14.dp))
 
+                // Nombre de la app (lado izquierdo)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = app.label,
-                        color = Color(0xFF1A1C18),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        style = AethericTypography.drawerRow,
+                        color = AethericTextOffWhite,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = app.category,
-                            color = Color(0xFF74796D),
-                            fontSize = 11.sp
-                        )
-                        if (app.isWorkProfile) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = accentColor.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = "PERFIL DE TRABAJO",
-                                    color = accentColor,
-                                    fontSize = 8.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                )
-                            }
+                    if (app.isWorkProfile) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = AethericForestSageContainer
+                        ) {
+                            Text(
+                                text = "TRABAJO",
+                                color = AethericForestSageLight,
+                                style = AethericTypography.microHint,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
                         }
                     }
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Categoría o funcionalidad alineada a la derecha en tipografía muted
+                Text(
+                    text = app.category.uppercase(),
+                    style = AethericTypography.captionCaps,
+                    color = AethericTextStone,
+                    maxLines = 1
+                )
+
                 if (app.launchCount > 0) {
-                    Text(
-                        text = "${app.launchCount}",
-                        color = accentColor,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = AethericSurfaceHigh
+                    ) {
+                        Text(
+                            text = "${app.launchCount}",
+                            style = TextStyle(
+                                fontFamily = JetBrainsMonoFontFamily,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AethericForestSageLight
+                            ),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
         }
@@ -325,17 +377,18 @@ private fun LauncherAppRow(
         DropdownMenu(
             expanded = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false },
-            shape = RoundedCornerShape(14.dp),
-            containerColor = Color.White
+            shape = RoundedCornerShape(12.dp),
+            containerColor = AethericSurfaceHigh,
+            border = BorderStroke(1.dp, AethericOutline)
         ) {
             DropdownMenuItem(
-                text = { Text("Información", fontSize = 13.sp) },
+                text = { Text("Información", style = AethericTypography.bodyRegular.copy(fontSize = 13.sp), color = AethericTextOffWhite) },
                 leadingIcon = { Icon(Icons.Default.Info, contentDescription = null, tint = accentColor) },
                 onClick = { isMenuExpanded = false }
             )
             DropdownMenuItem(
-                text = { Text("Ocultar", fontSize = 13.sp) },
-                leadingIcon = { Icon(Icons.Default.VisibilityOff, contentDescription = null, tint = Color(0xFF74796D)) },
+                text = { Text("Ocultar", style = AethericTypography.bodyRegular.copy(fontSize = 13.sp), color = AethericTextStone) },
+                leadingIcon = { Icon(Icons.Default.VisibilityOff, contentDescription = null, tint = AethericTextStone) },
                 onClick = { isMenuExpanded = false }
             )
         }

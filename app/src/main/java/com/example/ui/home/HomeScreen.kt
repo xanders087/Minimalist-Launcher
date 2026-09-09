@@ -78,6 +78,7 @@ import com.example.ui.settings.SettingsDialog
 import com.example.ui.theme.*
 import com.example.ui.widget.HomeWidgetsSection
 import com.example.ui.widget.WidgetManagerDialog
+import com.example.ui.wellbeing.WellbeingScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -144,7 +145,8 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             showColorPickerDialog ||
             showHiddenAppsDialog ||
             searchQuery.isNotEmpty() ||
-            isSheetOpen
+            isSheetOpen ||
+            selectedBottomTab == 2
 
     BackHandler(enabled = hasActiveOverlay) {
         when {
@@ -184,6 +186,9 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                     sheetState.hide()
                     isSheetOpen = false
                 }
+            }
+            selectedBottomTab == 2 -> {
+                selectedBottomTab = 0
             }
         }
     }
@@ -330,14 +335,21 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                 .statusBarsPadding()
         ) {
             // Scrollable / Proportional Body
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
+            if (selectedBottomTab == 2) {
+                WellbeingScreen(
+                    viewModel = viewModel,
+                    modifier = Modifier.weight(1f),
+                    onBackToHome = { selectedBottomTab = 0 }
+                )
+            } else {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
                 // 1. Top Section: Encabezado superior con estado zen y fecha
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -532,17 +544,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(18.dp))
                             .clickable {
-                                try {
-                                    context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    })
-                                } catch (e: Exception) {
-                                    try {
-                                        context.startActivity(Intent(Settings.ACTION_SETTINGS).apply {
-                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        })
-                                    } catch (_: Exception) {}
-                                }
+                                selectedBottomTab = 2
                             }
                             .testTag("card_screen_time")
                     ) {
@@ -674,6 +676,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                     }
                 }
             }
+        }
 
             // 5. Barra de navegación inferior fija con las 3 pestañas: FOCUS, APPS y WELLBEING
             Surface(
@@ -700,8 +703,11 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    selectedBottomTab = 0
-                                    viewModel.toggleZeroDistractions()
+                                    if (selectedBottomTab == 0) {
+                                        viewModel.toggleZeroDistractions()
+                                    } else {
+                                        selectedBottomTab = 0
+                                    }
                                 }
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                 .testTag("tab_focus")
@@ -709,7 +715,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                             Text(
                                 text = "FOCUS",
                                 style = AethericTypography.captionCaps,
-                                color = if (selectedBottomTab == 0 || state.isZeroDistractions) AethericTextOffWhite else AethericTextStone,
+                                color = if (selectedBottomTab == 0) AethericTextOffWhite else AethericTextStone,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(3.dp))
@@ -717,7 +723,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                 modifier = Modifier
                                     .size(4.dp)
                                     .background(
-                                        if (selectedBottomTab == 0 || state.isZeroDistractions) AethericForestSageLight else Color.Transparent,
+                                        if (selectedBottomTab == 0) AethericForestSageLight else Color.Transparent,
                                         CircleShape
                                     )
                             )
@@ -759,7 +765,6 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
                                     selectedBottomTab = 2
-                                    showWidgetManagerDialog = true
                                 }
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                 .testTag("tab_wellbeing")

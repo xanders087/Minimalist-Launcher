@@ -48,8 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
 import com.example.AppInfo
+import com.example.ui.theme.AethericThemeVariant
+import com.example.ui.theme.AethericFontFamilyChoice
 import com.example.LauncherViewModel
 import com.example.ui.gestures.GestureSensitivity
 import com.example.ui.home.getCategoryColor
@@ -202,6 +203,326 @@ fun SettingsDialog(
                                 .testTag("settings_personalize_scroll"),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
+                            // Selector de Tema Minimalista (OLED Puro, Grafito, Gris)
+                            item {
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = colors.cardBackground,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.cardBorder),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("setting_theme_variant_selector")
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.DarkMode,
+                                                    contentDescription = "Tema de Fondo",
+                                                    tint = accent.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = "Tema de Contraste",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = colors.textPrimary
+                                                )
+                                            }
+                                            Text(
+                                                text = state.themeVariant.title,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = accent.primary
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "Tonalidad base para eficiencia energética OLED y descanso visual.",
+                                            fontSize = 11.sp,
+                                            color = colors.textMuted
+                                        )
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            AethericThemeVariant.entries.forEach { variant ->
+                                                val isSelected = state.themeVariant == variant
+                                                Surface(
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = if (isSelected) variant.backgroundColor else colors.surfaceVariant,
+                                                    border = androidx.compose.foundation.BorderStroke(
+                                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                                        color = if (isSelected) accent.primary else colors.divider
+                                                    ),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .clickable { viewModel.setThemeVariant(variant) }
+                                                        .testTag("theme_variant_${variant.name.lowercase()}")
+                                                ) {
+                                                    Column(
+                                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(16.dp)
+                                                                .background(variant.backgroundColor, CircleShape)
+                                                                .border(1.dp, if (isSelected) accent.primary else Color.Gray, CircleShape),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            if (isSelected) {
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .size(6.dp)
+                                                                        .background(accent.primary, CircleShape)
+                                                                )
+                                                            }
+                                                        }
+                                                        Text(
+                                                            text = variant.title,
+                                                            fontSize = 11.sp,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                            color = if (isSelected) colors.textPrimary else colors.textSecondary,
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Selector de Tipografía (Sans, Mono, Serif)
+                            item {
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = colors.cardBackground,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.cardBorder),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("setting_typography_selector")
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.FormatSize,
+                                                    contentDescription = "Tipografía",
+                                                    tint = accent.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = "Familia Tipográfica",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = colors.textPrimary
+                                                )
+                                            }
+                                            Text(
+                                                text = state.typographyChoice.title,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = accent.primary
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "Estilo de letra del launcher: geométrica suiza, técnica mono o editorial.",
+                                            fontSize = 11.sp,
+                                            color = colors.textMuted
+                                        )
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            AethericFontFamilyChoice.entries.forEach { fontChoice ->
+                                                val isSelected = state.typographyChoice == fontChoice
+                                                val sampleFontFamily = when (fontChoice) {
+                                                    AethericFontFamilyChoice.SANS -> androidx.compose.ui.text.font.FontFamily.SansSerif
+                                                    AethericFontFamilyChoice.MONO -> androidx.compose.ui.text.font.FontFamily.Monospace
+                                                    AethericFontFamilyChoice.SERIF -> androidx.compose.ui.text.font.FontFamily.Serif
+                                                }
+                                                val sampleGlyph = when (fontChoice) {
+                                                    AethericFontFamilyChoice.SANS -> "Aa"
+                                                    AethericFontFamilyChoice.MONO -> "01"
+                                                    AethericFontFamilyChoice.SERIF -> "Tt"
+                                                }
+
+                                                Surface(
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = if (isSelected) accent.primary.copy(alpha = 0.12f) else colors.surfaceVariant,
+                                                    border = androidx.compose.foundation.BorderStroke(
+                                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                                        color = if (isSelected) accent.primary else colors.divider
+                                                    ),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .clickable { viewModel.setTypographyChoice(fontChoice) }
+                                                        .testTag("typography_choice_${fontChoice.name.lowercase()}")
+                                                ) {
+                                                    Column(
+                                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = sampleGlyph,
+                                                            fontSize = 16.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontFamily = sampleFontFamily,
+                                                            color = if (isSelected) accent.primary else colors.textPrimary
+                                                        )
+                                                        Text(
+                                                            text = fontChoice.title,
+                                                            fontSize = 11.sp,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                            color = if (isSelected) accent.primary else colors.textSecondary,
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                        Text(
+                                                            text = fontChoice.subtitle,
+                                                            fontSize = 9.sp,
+                                                            color = colors.textMuted,
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Control de Retardo Intencional (Pausa consciente de 1 a 5 segundos)
+                            item {
+                                val mindfulSeconds = state.wellbeingConfig.mindfulPauseSeconds
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = colors.cardBackground,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.cardBorder),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("setting_intentional_delay_card")
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Schedule,
+                                                    contentDescription = "Retardo Intencional",
+                                                    tint = accent.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = "Retardo Intencional",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = colors.textPrimary
+                                                )
+                                            }
+
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = accent.container
+                                            ) {
+                                                Text(
+                                                    text = "$mindfulSeconds seg",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = accent.primary,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Text(
+                                            text = "Pausa consciente para respirar antes de abrir aplicaciones bloqueadas o distractoras.",
+                                            fontSize = 11.sp,
+                                            color = colors.textMuted
+                                        )
+
+                                        // Selector rápido por chips (1s a 5s)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            (1..5).forEach { sec ->
+                                                val isSelected = mindfulSeconds == sec
+                                                Surface(
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    color = if (isSelected) accent.primary else colors.surfaceVariant,
+                                                    border = androidx.compose.foundation.BorderStroke(
+                                                        width = 1.dp,
+                                                        color = if (isSelected) accent.primary else colors.divider
+                                                    ),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .clickable { viewModel.setMindfulPauseSeconds(sec) }
+                                                        .testTag("delay_chip_${sec}s")
+                                                ) {
+                                                    Text(
+                                                        text = "${sec}s",
+                                                        fontSize = 11.sp,
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                        color = if (isSelected) accent.onPrimary else colors.textPrimary,
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier.padding(vertical = 7.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Slider continuo / por pasos de 1 a 5 segundos
+                                        Slider(
+                                            value = mindfulSeconds.toFloat(),
+                                            onValueChange = { viewModel.setMindfulPauseSeconds(it.toInt()) },
+                                            valueRange = 1f..5f,
+                                            steps = 3,
+                                            colors = SliderDefaults.colors(
+                                                thumbColor = accent.primary,
+                                                activeTrackColor = accent.primary,
+                                                inactiveTrackColor = colors.divider
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .testTag("slider_intentional_delay")
+                                        )
+                                    }
+                                }
+                            }
+
                             // Item 1: Home Screen Elements Manager
                             item {
                                 val elemConfig = state.homeScreenElements

@@ -38,6 +38,34 @@ enum class ThemeMode(val title: String, val description: String) {
 }
 
 /**
+ * Variantes tonales de tema para el sistema de diseño Aetheric Minimalist.
+ */
+enum class AethericThemeVariant(
+    val title: String,
+    val description: String,
+    val hexColor: String,
+    val backgroundColor: androidx.compose.ui.graphics.Color,
+    val surfaceColor: androidx.compose.ui.graphics.Color
+) {
+    OLED_PURO("OLED Puro", "Negro absoluto (#000000) • 0% consumo en pantalla", "#000000", androidx.compose.ui.graphics.Color(0xFF000000), androidx.compose.ui.graphics.Color(0xFF101010)),
+    GRAFITO("Grafito", "Gris carbón oscuro (#1B1B1D)", "#1B1B1D", androidx.compose.ui.graphics.Color(0xFF1B1B1D), androidx.compose.ui.graphics.Color(0xFF242426)),
+    GRIS("Gris", "Gris arquitectónico (#2A2A2C)", "#2A2A2C", androidx.compose.ui.graphics.Color(0xFF2A2A2C), androidx.compose.ui.graphics.Color(0xFF353437))
+}
+
+/**
+ * Familias tipográficas seleccionables para personalización minimalista.
+ */
+enum class AethericFontFamilyChoice(
+    val title: String,
+    val description: String,
+    val subtitle: String
+) {
+    SANS("Sans", "Inter / Neutralidad geométrica suiza", "Inter"),
+    MONO("Mono", "JetBrains Mono / Precisión técnica", "Monospace"),
+    SERIF("Serif", "Serif clásico / Editorial reflexivo", "Serif")
+}
+
+/**
  * Solar location coordinates and information
  */
 data class SolarLocation(

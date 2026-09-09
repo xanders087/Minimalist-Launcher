@@ -55,6 +55,7 @@ val AethericSolarAmberOnContainer = Color(0xFF7A6100)
 val AethericTextOffWhite = Color(0xFFF4F4F5)       // Alto contraste: Reloj principal, títulos hero y selección
 val AethericTextPureWhite = Color(0xFFFFFFFF)      // Blanco puro para glifos e iconos destacados
 val AethericTextStone = Color(0xFFA1A1AA)          // Gris piedra: etiquetas secundarias, metadatos, prefijos
+val AethericTextMutedZinc = Color(0xFFA1A1AA)      // Gris zinc suave para metadatos y categorías
 val AethericTextPebble = Color(0xFF71717A)         // Gris guijarro: pistas inactivas, iconos de búsqueda, guías
 val AethericTextSubtle = Color(0xFF444749)         // Elementos desactivados o marcas menores
 val AethericTextInverse = Color(0xFF1A1C1D)
