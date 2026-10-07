@@ -39,12 +39,6 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
     }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        // En un launcher de sistema, el botón de retroceso no debe cerrar la Activity.
-        // La navegación y el repliegue de overlays se gestionan mediante BackHandler en Compose.
-    }
 }
 
 

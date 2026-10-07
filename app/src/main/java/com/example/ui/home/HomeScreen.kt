@@ -422,7 +422,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                     Icon(
                                         imageVector = Icons.Default.Bedtime,
                                         contentDescription = "Zero Distractions / Focus",
-                                        tint = if (state.isZeroDistractions) AethericAmberLight else AethericTextStone,
+                                        tint = if (state.isZeroDistractions) AethericSolarAmber else AethericTextStone,
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }

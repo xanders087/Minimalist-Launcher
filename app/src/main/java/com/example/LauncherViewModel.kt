@@ -1,5 +1,6 @@
 package com.example
 
+import java.util.UUID
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -125,8 +126,10 @@ data class LauncherState(
 
 class LauncherViewModel(
     application: Application,
-    val appRepository: AppRepository = AppRepositoryImpl(application)
+    val appRepository: AppRepository
 ) : AndroidViewModel(application) {
+
+    constructor(application: Application) : this(application, AppRepositoryImpl(application))
 
     private val prefs = application.getSharedPreferences("app_launch_stats", Context.MODE_PRIVATE)
 

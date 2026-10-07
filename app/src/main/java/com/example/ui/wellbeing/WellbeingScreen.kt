@@ -398,7 +398,7 @@ fun WellbeingScreen(
                         color = AethericTextMutedZinc
                     )
                     Row(
-                        verticalAlignment = Alignment.Baseline,
+                        verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
