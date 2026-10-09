@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lanzador Minimalista</string>
+    <string name="accessibility_service_description">Permite a Lanzador Minimalista bloquear la pantalla y desplegar las notificaciones mediante gestos táctiles.</string>
+
+    <!-- Navigation Tabs -->
+    <string name="tab_surface">Superficie</string>
+    <string name="tab_drawer">Cajón</string>
+    <string name="tab_glance">Glance</string>
+    <string name="tab_prefs">Ajustes</string>
+
+    <!-- Home Screen -->
+    <string name="mindful_space">Espacio Consciente</string>
+    <string name="zen_active">Zen Activo</string>
+    <string name="intention_placeholder">¿Cuál es tu intención hoy?</string>
+    <string name="screen_peace">Paz en Pantalla</string>
+    <string name="screen_peace_stat">1h 12m</string>
+    <string name="screen_peace_vs">↓ 42% vs ayer</string>
+    <string name="soundscape">Paisaje Sonoro</string>
+    <string name="soundscape_title">Ámbar Cálido</string>
+    <string name="soundscape_artist">Brian Eno • Ambiental</string>
+    <string name="essentials_title">ESENCIALES</string>
+    <string name="essentials_count">5 Herramientas de Enfoque</string>
+    <string name="app_phone">Teléfono</string>
+    <string name="app_chat">Mensajes</string>
+    <string name="app_browser">Navegador</string>
+    <string name="app_reflect">Reflexión</string>
+    <string name="app_lens">Cámara</string>
+    <string name="quote_text">“La claridad proviene de lo que eliges ignorar.”</string>
+    <string name="quote_author">Protocolo Mente Tranquila • Moto Edge 50</string>
+    <string name="swipe_up_hint">DESLIZA HACIA ARRIBA PARA VER APPS</string>
+
+    <!-- App Drawer -->
+    <string name="app_drawer_title">CAJÓN DE APLICACIONES</string>
+    <string name="apps_available">%1$d aplicaciones disponibles</string>
+    <string name="search_apps_placeholder">Buscar por nombre o categoría…</string>
+    <string name="no_apps_found">No se encontraron coincidencias para \"%1$s\"</string>
+    <string name="cat_all">TODAS</string>
+    <string name="cat_productivity">PRODUCTIVIDAD</string>
+    <string name="cat_tools">HERRAMIENTAS</string>
+    <string name="cat_social">SOCIAL</string>
+    <string name="cat_media">MULTIMEDIA</string>
+
+    <!-- Launcher Settings -->
+    <string name="prefs_device_title">MOTOROLA EDGE 50 NEO</string>
+    <string name="prefs_screen_title">Preferencias del Lanzador</string>
+    <string name="mindful_surface_title">SUPERFICIE CONSCIENTE</string>
+    <string name="poled_active_badge">pOLED ACTIVO</string>
+    <string name="mindful_surface_desc">Restricción táctil calibrada específicamente para tu panel pOLED 120Hz 1.5K. Consumo nulo en áreas de negro puro con luminosidad suave de obsidiana.</string>
+
+    <string name="group_desktop_layout">PANTALLA Y DISEÑO</string>
+    <string name="group_ergonomics">Ergonomía</string>
+    <string name="setting_workspace_grid">Cuadrícula del Espacio</string>
+    <string name="setting_workspace_grid_desc">Densidad de elementos principales</string>
+    <string name="setting_icon_size">Tamaño de Iconos</string>
+    <string name="setting_widget_breathing_room">Espaciado de Widgets</string>
+    <string name="setting_show_status_bar">Mostrar Barra de Estado</string>
+    <string name="setting_show_status_bar_desc">Glifos de hora, batería y señal</string>
+
+    <string name="group_appearance">APARIENCIA</string>
+    <string name="group_poled_tiers">Niveles pOLED</string>
+    <string name="setting_surface_palette">Paleta de Superficie</string>
+    <string name="palette_warm_ivory">Marfil Cálido</string>
+    <string name="palette_slate_stone">Gris Pizarra</string>
+    <string name="palette_deep_charcoal">Carbón Profundo</string>
+    <string name="setting_frosted_glass">Intensidad Cristal Esmerilado</string>
+    <string name="setting_typographic_voice">Voz Tipográfica</string>
+
+    <string name="group_gestures">GESTOS TÁCTILES</string>
+    <string name="group_edge_sense">Edge Sense</string>
+    <string name="gesture_swipe_up">Deslizar Arriba</string>
+    <string name="gesture_swipe_up_desc">Gesto vertical en la pantalla</string>
+    <string name="gesture_double_tap">Doble Toque</string>
+    <string name="gesture_double_tap_desc">Toque rápido en espacio libre</string>
+    <string name="gesture_swipe_down">Deslizar Abajo</string>
+    <string name="gesture_swipe_down_desc">En cualquier parte de la pantalla</string>
+
+    <string name="group_iconography">ICONOGRAFÍA Y CLARIDAD</string>
+    <string name="group_visual_order">Orden Visual</string>
+    <string name="setting_monochromatic">Forzar Iconos Monocromáticos</string>
+    <string name="setting_monochromatic_desc">Transformar todos los iconos de terceros a glifos blancos</string>
+    <string name="setting_hide_labels">Ocultar Etiquetas de Texto</string>
+    <string name="setting_hide_labels_desc">Omitir nombres bajo los iconos del lanzador</string>
+    <string name="setting_suppress_dots">Suprimir Puntos de Notificación</string>
+    <string name="setting_suppress_dots_desc">Eliminar insignias rojas de contadores</string>
+
+    <string name="group_mindful_mode">MODO CONSCIENTE</string>
+    <string name="group_wellbeing">Bienestar Digital</string>
+    <string name="setting_usage_prompts">Pausas Uso Consciente</string>
+    <string name="setting_usage_prompts_desc">Microvibración sutil al abrir feeds sociales</string>
+    <string name="setting_evening_grayscale">Escala de Grises Nocturna</string>
+    <string name="setting_evening_grayscale_desc">Transición progresiva a monocromo al dormir</string>
+
+    <string name="btn_reset_defaults">Restablecer Valores Predeterminados</string>
+    <string name="build_version_info">Warm Obsidian Launcher • Edición 5.4.1 (Neo)</string>
+</resources>

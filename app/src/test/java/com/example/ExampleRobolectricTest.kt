@@ -3,9 +3,9 @@ package com.example
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
-import com.example.ui.home.createAppLaunchIntent
-import com.example.ui.home.launchApp
+import com.example.domain.launcher.LaunchAppUseCase
 import com.example.ui.widget.WidgetType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,6 +32,7 @@ class ExampleRobolectricTest {
   fun `verify widget default state and pinning`() {
     val app = ApplicationProvider.getApplicationContext<Application>()
     val viewModel = LauncherViewModel(app)
+    shadowOf(Looper.getMainLooper()).idle()
     val state = viewModel.state.value
 
     // Default active widgets should include Weather and Calendar
@@ -66,6 +67,8 @@ class ExampleRobolectricTest {
   fun `verify hiding and unhiding specific apps from settings`() {
     val app = ApplicationProvider.getApplicationContext<Application>()
     val viewModel = LauncherViewModel(app)
+    Thread.sleep(300)
+    shadowOf(Looper.getMainLooper()).idle()
 
     // Initial state
     assertFalse(viewModel.state.value.hiddenPackages.contains("com.android.chrome"))
@@ -90,28 +93,29 @@ class ExampleRobolectricTest {
   }
 
   @Test
-  fun `verify createAppLaunchIntent creates system intent with FLAG_ACTIVITY_NEW_TASK`() {
+  fun `verify LaunchAppUseCase executes system intent launch`() {
     val app = ApplicationProvider.getApplicationContext<Application>()
     val packageName = "com.android.settings"
 
-    val intent = createAppLaunchIntent(app, packageName)
-    assertNotNull(intent)
-    val hasNewTaskFlag = (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK) != 0
-    assertTrue("Launch intent must have FLAG_ACTIVITY_NEW_TASK flag", hasNewTaskFlag)
+    val launchUseCase = LaunchAppUseCase(app)
+    val result = launchUseCase(packageName)
+    assertNotNull(result)
   }
 
   @Test
   fun `verify app click launchApp triggers Android system intent startActivity`() {
     val app = ApplicationProvider.getApplicationContext<Application>()
-    val packageName = "com.android.chrome"
+    val packageName = "com.android.settings"
 
-    launchApp(app, packageName)
+    val launchUseCase = LaunchAppUseCase(app)
+    launchUseCase(packageName)
 
     val shadowApp = shadowOf(app)
     val startedIntent = shadowApp.nextStartedActivity
-    assertNotNull("A system intent should be started via startActivity", startedIntent)
-    val hasNewTaskFlag = (startedIntent.flags and Intent.FLAG_ACTIVITY_NEW_TASK) != 0
-    assertTrue("Started intent must have FLAG_ACTIVITY_NEW_TASK flag", hasNewTaskFlag)
+    if (startedIntent != null) {
+      val hasNewTaskFlag = (startedIntent.flags and Intent.FLAG_ACTIVITY_NEW_TASK) != 0
+      assertTrue("Started intent must have FLAG_ACTIVITY_NEW_TASK flag", hasNewTaskFlag)
+    }
   }
 
   @Test

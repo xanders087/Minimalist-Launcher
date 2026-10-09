@@ -1,5 +1,7 @@
 package com.example.ui.settings
 
+import android.Manifest
+import androidx.compose.foundation.BorderStroke
 import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -49,17 +51,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Home
+import com.example.util.DefaultLauncherHelper
 import com.example.AppInfo
 import com.example.ui.theme.AethericThemeVariant
 import com.example.ui.theme.AethericFontFamilyChoice
 import com.example.LauncherViewModel
 import com.example.ui.gestures.GestureSensitivity
-import com.example.ui.home.getCategoryColor
+import com.example.ui.theme.getCategoryColor
 import com.example.ui.theme.LauncherTheme
 import com.example.ui.theme.SolarLocation
 import com.example.ui.theme.ThemeMode
 
-@OptIn(ExperimentalMaterial3Api::class)
+import androidx.compose.ui.platform.LocalContext
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.example.util.LocationHelper
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.MyLocation
+import com.example.ui.theme.WarmMinimalistTypography
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsDialog(
     viewModel: LauncherViewModel,
@@ -73,6 +85,7 @@ fun SettingsDialog(
     val state by viewModel.state.collectAsState()
     val colors = LauncherTheme.colors
     val accent = state.accentTheme
+    val context = LocalContext.current
     var selectedSection by remember { mutableStateOf(0) } // 0: Dark & Solar Schedule, 1: Hidden Apps, 2: Info & Shortcuts
     var appFilterQuery by remember { mutableStateOf("") }
     var filterTab by remember { mutableStateOf(0) } // 0: All Apps, 1: Hidden Only, 2: Visible Only
@@ -144,17 +157,80 @@ fun SettingsDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 480.dp),
+                    .heightIn(max = 520.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Minimal Zen Mindful Summary Card (Stitch Screen 1)
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = colors.cardBackground,
+                    border = BorderStroke(1.dp, colors.cardBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(accent.container, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.BrightnessAuto,
+                                    contentDescription = "Zen",
+                                    tint = accent.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "MINDFUL SURFACE",
+                                    style = WarmMinimalistTypography.captionCaps,
+                                    color = accent.primary
+                                )
+                                Text(
+                                    text = "Active Digital Restraint",
+                                    style = WarmMinimalistTypography.bodyRegular,
+                                    color = colors.textPrimary
+                                )
+                            }
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            val usageMinutes = state.todayUsageSummary.totalScreenTimeMs / (1000 * 60)
+                            val hours = usageMinutes / 60
+                            val mins = usageMinutes % 60
+                            val timeText = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+                            Text(
+                                text = timeText,
+                                style = WarmMinimalistTypography.headlineMd.copy(fontSize = 18.sp),
+                                color = colors.textPrimary
+                            )
+                            Text(
+                                text = "TODAY'S USAGE",
+                                style = WarmMinimalistTypography.microHint,
+                                color = colors.textMuted
+                            )
+                        }
+                    }
+                }
+
                 // 4 Section Tabs: Personalizar, Gestos, Modo Solar, Apps
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     val tabs = listOf(
-                        Triple("Personalizar", Icons.Default.Palette, "tab_settings_personalize"),
-                        Triple("Gestos", Icons.Default.Gesture, "tab_settings_gestures"),
+                        Triple("Appearance", Icons.Default.Palette, "tab_settings_personalize"),
+                        Triple("Gestures", Icons.Default.Gesture, "tab_settings_gestures"),
                         Triple("Solar", Icons.Default.Nightlight, "tab_settings_theme_schedule"),
                         Triple("Apps (${hiddenSet.size})", Icons.Default.VisibilityOff, "tab_settings_hidden_apps")
                     )
@@ -196,7 +272,7 @@ fun SettingsDialog(
 
                 when (selectedSection) {
                     0 -> {
-                        // SECTION 0: Personalizar (Elementos, Fondos, Widgets, Colores, Texto)
+                        // SECTION 0: Personalizar (01. Pantalla de Inicio, 02. Apariencia, 03. Elementos)
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -204,6 +280,25 @@ fun SettingsDialog(
                                 .testTag("settings_personalize_scroll"),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
+                            // Header 01. Pantalla de Inicio
+                            item {
+                                Text(
+                                    text = "01. DESKTOP & LAYOUT",
+                                    style = WarmMinimalistTypography.captionCaps,
+                                    color = colors.textMuted,
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                                )
+                            }
+                            // Header 02. Apariencia
+                            item {
+                                Text(
+                                    text = "02. APPEARANCE",
+                                    style = WarmMinimalistTypography.captionCaps,
+                                    color = colors.textMuted,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                                )
+                            }
+
                             // Selector de Tema Minimalista (OLED Puro, Grafito, Gris)
                             item {
                                 Surface(
@@ -520,6 +615,58 @@ fun SettingsDialog(
                                                 .fillMaxWidth()
                                                 .testTag("slider_intentional_delay")
                                         )
+                                    }
+                                }
+                            }
+
+                            // Item 0: Default Launcher Status / Request
+                            item {
+                                val isDefault = DefaultLauncherHelper.isDefaultLauncher(context)
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isDefault) colors.cardBackground else accent.container,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isDefault) colors.cardBorder else accent.primary
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            DefaultLauncherHelper.promptSetDefaultLauncher(context)
+                                        }
+                                        .testTag("setting_item_default_launcher")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Home,
+                                                contentDescription = "Lanzador Predeterminado",
+                                                tint = accent.primary,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column {
+                                                Text(
+                                                    text = "Lanzador Predeterminado",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = colors.textPrimary
+                                                )
+                                                Text(
+                                                    text = if (isDefault) "Activo como Lanzador Principal del teléfono" else "No es el lanzador predeterminado (Toca para activar)",
+                                                    fontSize = 11.sp,
+                                                    color = if (isDefault) colors.textMuted else accent.primary,
+                                                    fontWeight = if (isDefault) FontWeight.Normal else FontWeight.Bold
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1175,6 +1322,7 @@ fun SettingsDialog(
     )
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ThemeSchedulingSection(
     viewModel: LauncherViewModel,
@@ -1184,6 +1332,15 @@ fun ThemeSchedulingSection(
     showLocationSelector: Boolean,
     onToggleLocationSelector: () -> Unit
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val locationPermissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+    var isFetchingLocation by remember { mutableStateOf(false) }
     val solar = state.solarTimes
 
     LazyColumn(
@@ -1687,6 +1844,70 @@ fun ThemeSchedulingSection(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    // Auto-Detect Current Location
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = accent.container,
+                        border = BorderStroke(1.dp, accent.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (locationPermissionsState.allPermissionsGranted) {
+                                    isFetchingLocation = true
+                                    coroutineScope.launch {
+                                        val (location, city) = LocationHelper.getCurrentLocationAndCity(context)
+                                        if (location != null && city != null) {
+                                            viewModel.updateLocationAndWeather(
+                                                city = city,
+                                                latitude = location.latitude,
+                                                longitude = location.longitude
+                                            )
+                                        }
+                                        isFetchingLocation = false
+                                        onToggleLocationSelector()
+                                    }
+                                } else {
+                                    locationPermissionsState.launchMultiplePermissionRequest()
+                                }
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isFetchingLocation) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    color = accent.primary,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "Fetching location...",
+                                    fontSize = 13.sp,
+                                    color = accent.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.MyLocation,
+                                    contentDescription = "Auto Detect Location",
+                                    tint = accent.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "Auto-Detect Current Location",
+                                    fontSize = 13.sp,
+                                    color = accent.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
                     SolarLocation.DefaultLocations.forEach { loc ->
                         val isSelected = loc.name == state.selectedSolarLocation.name
                         Surface(

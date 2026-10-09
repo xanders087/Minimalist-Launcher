@@ -16,6 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowResolveInfo
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -24,6 +25,15 @@ class LaunchAppUseCaseTest {
     @Test
     fun `test launch valid package injects critical flags NEW_TASK and RESET_TASK_IF_NEEDED`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
+        val shadowPm = shadowOf(app.packageManager)
+
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            setPackage("com.android.settings")
+        }
+        val resolveInfo = ShadowResolveInfo.newResolveInfo("Settings", "com.android.settings", "com.android.settings.Settings")
+        shadowPm.addResolveInfoForIntent(intent, resolveInfo)
+
         val useCase = LaunchAppUseCase(app)
 
         val result = useCase("com.android.settings")
@@ -42,6 +52,12 @@ class LaunchAppUseCaseTest {
     @Test
     fun `test launch unknown package triggers Level 3 system action fallback or AppNotFound`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
+        val shadowPm = shadowOf(app.packageManager)
+
+        val dialIntent = Intent(Intent.ACTION_DIAL)
+        val dialResolveInfo = ShadowResolveInfo.newResolveInfo("Phone", "com.android.dialer", "com.android.dialer.Dialtivity")
+        shadowPm.addResolveInfoForIntent(dialIntent, dialResolveInfo)
+
         val useCase = LaunchAppUseCase(app)
 
         // Dialer fallback test

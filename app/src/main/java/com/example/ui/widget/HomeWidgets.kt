@@ -1,5 +1,6 @@
 package com.example.ui.widget
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -51,6 +52,9 @@ import com.example.ui.theme.AccentTheme
 import com.example.ui.theme.LauncherColorScheme
 import com.example.ui.theme.LauncherTheme
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+
 @Composable
 fun HomeWidgetsSection(
     viewModel: LauncherViewModel,
@@ -74,6 +78,7 @@ fun HomeWidgetsSection(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(horizontal = 0.dp)
             ) {
+                // Minimalist Custom Widgets
                 items(activeWidgets, key = { it.type.name }) { widgetConfig ->
                     when (widgetConfig.type) {
                         WidgetType.WEATHER -> {
@@ -603,12 +608,54 @@ fun launchCalendarApp(context: Context) {
 }
 
 fun launchWeatherApp(context: Context) {
+    val pm = context.packageManager
+
+    // 1. Check for standalone Google Weather app / activity
+    val googleWeatherIntent = Intent().apply {
+        component = ComponentName(
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.apps.gsa.weather.WeatherActivity"
+        )
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    if (googleWeatherIntent.resolveActivity(pm) != null) {
+        try {
+            context.startActivity(googleWeatherIntent)
+            return
+        } catch (_: Throwable) {}
+    }
+
+    // 2. Check for manufacturer native weather apps
+    val weatherPackages = listOf(
+        "com.google.android.apps.weather",                   // Google Weather standalone
+        "com.sec.android.daemonapp",                          // Samsung Weather
+        "com.miui.weather2",                                  // Xiaomi Weather
+        "com.oneplus.weather",                                // OnePlus Weather
+        "com.coloros.weather2",                               // Oppo / Realme Weather
+        "com.huawei.android.totemweather",                    // Huawei Weather
+        "com.motorola.timeweatherwidget",                     // Motorola Weather
+        "com.accuweather.android",                            // AccuWeather
+        "com.weather.Weather"                                 // The Weather Channel
+    )
+
+    for (pkg in weatherPackages) {
+        val launchIntent = pm.getLaunchIntentForPackage(pkg)
+        if (launchIntent != null) {
+            try {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(launchIntent)
+                return
+            } catch (_: Throwable) {}
+        }
+    }
+
+    // 3. Fallback: Open Google Search Weather web/app view
     try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=weather")).apply {
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=weather")).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(intent)
+        context.startActivity(webIntent)
     } catch (e: Throwable) {
-        Toast.makeText(context, "Weather details", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Weather app", Toast.LENGTH_SHORT).show()
     }
 }

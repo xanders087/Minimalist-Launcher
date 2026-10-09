@@ -1,6 +1,8 @@
 package com.example.ui.widget
 
+import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -29,8 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.LauncherViewModel
 import com.example.ui.theme.LauncherTheme
+import androidx.compose.ui.platform.LocalContext
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.example.util.LocationHelper
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.MyLocation
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun WidgetManagerDialog(
     viewModel: LauncherViewModel,
@@ -41,22 +49,38 @@ fun WidgetManagerDialog(
     val colors = LauncherTheme.colors
     var selectedTab by remember { mutableStateOf(0) } // 0: Pin / Unpin, 1: Weather Setup, 2: Calendar Events, 3: Daily Focus
 
-    var newEventTitle by remember { mutableStateOf("") }
-    var newEventTime by remember { mutableStateOf("") }
-    var newEventLocation by remember { mutableStateOf("") }
-    var showAddEventForm by remember { mutableStateOf(false) }
-
     var customCityName by remember { mutableStateOf(state.weatherData.city) }
     var focusTextState by remember { mutableStateOf(state.focusGoal.goalText) }
 
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val locationPermissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+    val calendarPermissionState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.READ_CALENDAR
+        )
+    )
+    var isFetchingLocation by remember { mutableStateOf(false) }
+
+    LaunchedEffect(calendarPermissionState.allPermissionsGranted) {
+        if (calendarPermissionState.allPermissionsGranted) {
+            viewModel.loadSystemCalendarEvents()
+        }
+    }
+
     val cityPresets = listOf(
-        Triple("San Francisco", 68, "Partly Cloudy"),
-        Triple("New York", 75, "Sunny"),
-        Triple("London", 61, "Rain Showers"),
-        Triple("Tokyo", 79, "Clear Sky"),
-        Triple("Paris", 66, "Mild Breeze"),
-        Triple("Seattle", 59, "Light Rain"),
-        Triple("Berlin", 64, "Overcast")
+        Triple("Bogotá", 4.6097, -74.0817),
+        Triple("San Francisco", 37.7749, -122.4194),
+        Triple("New York", 40.7128, -74.0060),
+        Triple("London", 51.5074, -0.1278),
+        Triple("Tokyo", 35.6762, 139.6503),
+        Triple("Paris", 48.8566, 2.3522),
+        Triple("Madrid", 40.4168, -3.7038)
     )
 
     AlertDialog(
@@ -272,6 +296,69 @@ fun WidgetManagerDialog(
                             }
 
                             item {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = accent.container,
+                                    border = BorderStroke(1.dp, accent.primary),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (locationPermissionsState.allPermissionsGranted) {
+                                                isFetchingLocation = true
+                                                coroutineScope.launch {
+                                                    val (location, city) = LocationHelper.getCurrentLocationAndCity(context)
+                                                    if (location != null && city != null) {
+                                                        viewModel.updateLocationAndWeather(
+                                                            city = city,
+                                                            latitude = location.latitude,
+                                                            longitude = location.longitude
+                                                        )
+                                                    }
+                                                    isFetchingLocation = false
+                                                }
+                                            } else {
+                                                locationPermissionsState.launchMultiplePermissionRequest()
+                                            }
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        if (isFetchingLocation) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                color = accent.primary,
+                                                strokeWidth = 2.dp
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "Fetching location...",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = accent.primary
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.MyLocation,
+                                                contentDescription = "Auto Detect Location",
+                                                tint = accent.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "Auto-Detect Current Location",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = accent.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            item {
                                 Text(
                                     text = "SELECT CITY PRESET",
                                     fontSize = 10.sp,
@@ -281,7 +368,7 @@ fun WidgetManagerDialog(
                                 )
                             }
 
-                            items(cityPresets) { (cityName, tempF, condition) ->
+                            items(cityPresets) { (cityName, lat, lon) ->
                                 val isCurrentCity = state.weatherData.city == cityName
 
                                 Surface(
@@ -295,17 +382,11 @@ fun WidgetManagerDialog(
                                         .fillMaxWidth()
                                         .clickable {
                                             customCityName = cityName
-                                            viewModel.updateWeather(
-                                                city = cityName,
-                                                tempF = tempF,
-                                                condition = condition,
-                                                highF = tempF + 5,
-                                                lowF = tempF - 10
-                                            )
+                                            viewModel.updateLocationAndWeather(cityName, lat, lon)
                                         }
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -317,18 +398,20 @@ fun WidgetManagerDialog(
                                                 color = colors.textPrimary
                                             )
                                             Text(
-                                                text = condition,
+                                                text = if (isCurrentCity) state.weatherData.condition else "Tap to fetch live weather",
                                                 fontSize = 11.sp,
                                                 color = colors.textMuted
                                             )
                                         }
 
-                                        Text(
-                                            text = if (state.weatherData.isCelsius) "${((tempF - 32) * 5 / 9)}°C" else "$tempF°F",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp,
-                                            color = if (isCurrentCity) accent.primary else colors.textPrimary
-                                        )
+                                        if (isCurrentCity) {
+                                            Text(
+                                                text = state.weatherData.displayTemp,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = accent.primary
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -348,116 +431,72 @@ fun WidgetManagerDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "UPCOMING AGENDA",
+                                        text = "GOOGLE CALENDAR SYNC",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.sp,
                                         color = colors.textMuted
                                     )
+                                }
+                            }
 
-                                    TextButton(
-                                        onClick = { showAddEventForm = !showAddEventForm },
-                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                            item {
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = accent.container,
+                                    border = BorderStroke(1.dp, accent.primary),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (calendarPermissionState.allPermissionsGranted) {
+                                                viewModel.loadSystemCalendarEvents()
+                                            } else {
+                                                calendarPermissionState.launchMultiplePermissionRequest()
+                                            }
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = "Add Event",
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription = "Sync Calendar",
                                             tint = accent.primary,
-                                            modifier = Modifier.size(14.dp)
+                                            modifier = Modifier.size(18.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Spacer(modifier = Modifier.width(10.dp))
                                         Text(
-                                            text = if (showAddEventForm) "Cancel" else "New Event",
-                                            color = accent.primary,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold
+                                            text = if (calendarPermissionState.allPermissionsGranted) 
+                                                "Sync Calendar Events Now" 
+                                            else 
+                                                "Grant Permission to Sync Calendar",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = accent.primary
                                         )
                                     }
                                 }
                             }
 
-                            if (showAddEventForm) {
-                                item {
-                                    Surface(
-                                        shape = RoundedCornerShape(14.dp),
-                                        color = colors.surfaceVariant,
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, accent.primary.copy(alpha = 0.5f)),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.padding(12.dp),
-                                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            OutlinedTextField(
-                                                value = newEventTitle,
-                                                onValueChange = { newEventTitle = it },
-                                                label = { Text("Event Title", color = colors.textMuted) },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                colors = OutlinedTextFieldDefaults.colors(
-                                                    focusedBorderColor = accent.primary,
-                                                    unfocusedBorderColor = colors.divider,
-                                                    focusedTextColor = colors.textPrimary,
-                                                    unfocusedTextColor = colors.textPrimary
-                                                ),
-                                                singleLine = true
-                                            )
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                OutlinedTextField(
-                                                    value = newEventTime,
-                                                    onValueChange = { newEventTime = it },
-                                                    label = { Text("Time (e.g. 03:00 PM)", color = colors.textMuted) },
-                                                    modifier = Modifier.weight(1f),
-                                                    colors = OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = accent.primary,
-                                                        unfocusedBorderColor = colors.divider,
-                                                        focusedTextColor = colors.textPrimary,
-                                                        unfocusedTextColor = colors.textPrimary
-                                                    ),
-                                                    singleLine = true
-                                                )
-                                                OutlinedTextField(
-                                                    value = newEventLocation,
-                                                    onValueChange = { newEventLocation = it },
-                                                    label = { Text("Location", color = colors.textMuted) },
-                                                    modifier = Modifier.weight(1f),
-                                                    colors = OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = accent.primary,
-                                                        unfocusedBorderColor = colors.divider,
-                                                        focusedTextColor = colors.textPrimary,
-                                                        unfocusedTextColor = colors.textPrimary
-                                                    ),
-                                                    singleLine = true
-                                                )
-                                            }
-                                            Button(
-                                                onClick = {
-                                                    if (newEventTitle.isNotBlank()) {
-                                                        val t = if (newEventTime.isNotBlank()) newEventTime else "Today"
-                                                        viewModel.addCalendarEvent(newEventTitle, t, newEventLocation)
-                                                        newEventTitle = ""
-                                                        newEventTime = ""
-                                                        newEventLocation = ""
-                                                        showAddEventForm = false
-                                                    }
-                                                },
-                                                colors = ButtonDefaults.buttonColors(containerColor = accent.primary),
-                                                shape = RoundedCornerShape(10.dp),
-                                                modifier = Modifier.fillMaxWidth()
-                                            ) {
-                                                Text("Add to Widget Agenda", color = Color.White, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                    }
-                                }
+                            item {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "UPCOMING EVENTS (24H)",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp,
+                                    color = colors.textMuted
+                                )
                             }
 
                             if (state.calendarEvents.isEmpty()) {
                                 item {
                                     Text(
-                                        text = "No upcoming events scheduled.",
+                                        text = if (calendarPermissionState.allPermissionsGranted)
+                                            "No upcoming events found in your calendar for the next 24 hours."
+                                        else
+                                            "Permission required to load events from your device's calendar.",
                                         fontSize = 12.sp,
                                         color = colors.textMuted,
                                         modifier = Modifier.padding(vertical = 12.dp)
@@ -472,7 +511,7 @@ fun WidgetManagerDialog(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
@@ -484,21 +523,9 @@ fun WidgetManagerDialog(
                                                     color = colors.textPrimary
                                                 )
                                                 Text(
-                                                    text = "${event.time} • ${event.location ?: "Meeting"}",
+                                                    text = "${event.time}${if (event.location != null) " • ${event.location}" else ""}",
                                                     fontSize = 11.sp,
                                                     color = colors.textMuted
-                                                )
-                                            }
-
-                                            IconButton(
-                                                onClick = { viewModel.removeCalendarEvent(event.id) },
-                                                modifier = Modifier.size(28.dp)
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Delete",
-                                                    tint = colors.dangerRed,
-                                                    modifier = Modifier.size(16.dp)
                                                 )
                                             }
                                         }

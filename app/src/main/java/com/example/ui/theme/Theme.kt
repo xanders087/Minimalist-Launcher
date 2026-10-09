@@ -59,7 +59,7 @@ fun MyApplicationTheme(
       if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     }
     darkTheme -> darkColorScheme(
-      primary = accentTheme.primary,
+      primary = launcherColors.accentPrimary,
       secondary = launcherColors.accentContainer,
       background = launcherColors.background,
       surface = launcherColors.surface,
@@ -69,7 +69,7 @@ fun MyApplicationTheme(
       onSurface = launcherColors.textPrimary
     )
     else -> lightColorScheme(
-      primary = accentTheme.primary,
+      primary = launcherColors.accentPrimary,
       secondary = launcherColors.accentContainer,
       background = launcherColors.background,
       surface = launcherColors.surface,

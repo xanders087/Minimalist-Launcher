@@ -7,8 +7,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Adaptive Color Scheme for Minimalist Launcher supporting Light, Dark,
- * AMOLED Pure Black, and Warm Night Eye Comfort with WCAG 2.1 AA/AAA compliance.
+ * Warm Minimalist Launcher Color Scheme
+ * Fidelidad exacta a las especificaciones de Stitch para Light Mode (Warm Minimalist) y Dark Mode.
  */
 data class LauncherColorScheme(
     val isDark: Boolean,
@@ -41,129 +41,58 @@ data class LauncherColorScheme(
             isPureBlack: Boolean = false,
             isWarmEyeComfort: Boolean = false
         ): LauncherColorScheme {
-            val onPrimary = WcagContrastUtil.getAccessibleTextColor(accent.primary)
-
             return if (isDark) {
-                if (isPureBlack) {
-                    val bg = Color(0xFF000000)
-                    val surf = Color(0xFF101010)
-                    val (container, onContainer) = WcagContrastUtil.createAccessibleContainerPair(accent.primary, isDark = true)
-                    val accentText = WcagContrastUtil.getAccessibleAccentTextColor(accent.primary, bg, minRatio = 4.5)
+                val bg = if (isPureBlack) Color(0xFF0A0A09) else DarkBackground
+                val cardBg = if (isPureBlack) Color(0xFF161514) else DarkSurfaceContainer
 
-                    // AMOLED Pure Black
-                    LauncherColorScheme(
-                        isDark = true,
-                        isPureBlack = true,
-                        isWarmEyeComfort = isWarmEyeComfort,
-                        background = bg,
-                        surface = surf,
-                        surfaceVariant = Color(0xFF181818),
-                        surfaceElevated = Color(0xFF202020),
-                        cardBackground = Color(0xFF0D0D0D),
-                        cardBorder = Color(0xFF262626),
-                        textPrimary = if (isWarmEyeComfort) Color(0xFFFFECC8) else Color(0xFFF1F1F1),
-                        textSecondary = if (isWarmEyeComfort) Color(0xFFD4C1A5) else Color(0xFFAAAAAA),
-                        textMuted = Color(0xFF707070),
-                        divider = Color(0xFF262626),
-                        iconTint = if (isWarmEyeComfort) Color(0xFFFFECC8) else Color(0xFFE5E5E5),
-                        accentPrimary = accent.primary,
-                        accentOnPrimary = onPrimary,
-                        accentTextOnSurface = accentText,
-                        accentContainer = container,
-                        accentOnContainer = onContainer,
-                        chipBackground = Color(0xFF1E1E1E),
-                        searchBarBackground = Color(0xFF141414)
-                    )
-                } else if (isWarmEyeComfort) {
-                    val bg = Color(0xFF151410)
-                    val surf = Color(0xFF211E18)
-                    val (container, onContainer) = WcagContrastUtil.createAccessibleContainerPair(accent.primary, isDark = true)
-                    val accentText = WcagContrastUtil.getAccessibleAccentTextColor(accent.primary, bg, minRatio = 4.5)
-
-                    // Warm Night Comfort (Amber / Low Blue Light)
-                    LauncherColorScheme(
-                        isDark = true,
-                        isPureBlack = false,
-                        isWarmEyeComfort = true,
-                        background = bg,
-                        surface = surf,
-                        surfaceVariant = Color(0xFF2C2820),
-                        surfaceElevated = Color(0xFF373228),
-                        cardBackground = Color(0xFF1F1C16),
-                        cardBorder = Color(0xFF3B352A),
-                        textPrimary = Color(0xFFFFE8C2),
-                        textSecondary = Color(0xFFDCC49E),
-                        textMuted = Color(0xFFA19074),
-                        divider = Color(0xFF383226),
-                        iconTint = Color(0xFFFFE3B0),
-                        accentPrimary = accent.primary,
-                        accentOnPrimary = onPrimary,
-                        accentTextOnSurface = accentText,
-                        accentContainer = container,
-                        accentOnContainer = onContainer,
-                        chipBackground = Color(0xFF2C2820),
-                        searchBarBackground = Color(0xFF211E18)
-                    )
-                } else {
-                    val bg = Color(0xFF131512)
-                    val surf = Color(0xFF1E211D)
-                    val (container, onContainer) = WcagContrastUtil.createAccessibleContainerPair(accent.primary, isDark = true)
-                    val accentText = WcagContrastUtil.getAccessibleAccentTextColor(accent.primary, bg, minRatio = 4.5)
-
-                    // Standard Deep Charcoal Dark
-                    LauncherColorScheme(
-                        isDark = true,
-                        isPureBlack = false,
-                        isWarmEyeComfort = false,
-                        background = bg,
-                        surface = surf,
-                        surfaceVariant = Color(0xFF282C26),
-                        surfaceElevated = Color(0xFF323730),
-                        cardBackground = Color(0xFF1B1D19),
-                        cardBorder = Color(0xFF30362E),
-                        textPrimary = Color(0xFFE2E4DE),
-                        textSecondary = Color(0xFFA5A9A0),
-                        textMuted = Color(0xFF757A70),
-                        divider = Color(0xFF2E332B),
-                        iconTint = Color(0xFFE2E4DE),
-                        accentPrimary = accent.primary,
-                        accentOnPrimary = onPrimary,
-                        accentTextOnSurface = accentText,
-                        accentContainer = container,
-                        accentOnContainer = onContainer,
-                        chipBackground = Color(0xFF262A24),
-                        searchBarBackground = Color(0xFF1E211D)
-                    )
-                }
+                // Dark Mode (Stitch Exact: #E3E2E2 primary text, #C4C7C7 secondary text, #9E968D muted text, #C7C6C6 primary accent)
+                LauncherColorScheme(
+                    isDark = true,
+                    isPureBlack = isPureBlack,
+                    isWarmEyeComfort = isWarmEyeComfort,
+                    background = bg,
+                    surface = bg,
+                    surfaceVariant = DarkSurfaceContainerHigh,
+                    surfaceElevated = DarkSurfaceContainerHighest,
+                    cardBackground = cardBg,
+                    cardBorder = if (isPureBlack) Color(0xFF262626) else DarkOutlineVariant,
+                    textPrimary = Color(0xFFE3E2E2), // Stitch Dark Mode Primary Text
+                    textSecondary = Color(0xFFC4C7C7), // Stitch Dark Mode Secondary Text
+                    textMuted = Color(0xFF9E968D), // Stitch Dark Mode Muted Text (ink-muted)
+                    divider = DarkOutlineVariant,
+                    iconTint = Color(0xFFC7C6C6),
+                    accentPrimary = Color(0xFFC7C6C6), // Stitch Dark Mode Primary Accent
+                    accentOnPrimary = Color(0xFF303031),
+                    accentTextOnSurface = Color(0xFFC7C6C6),
+                    accentContainer = DarkPrimaryContainer,
+                    accentOnContainer = DarkOnPrimaryContainer,
+                    chipBackground = DarkSurfaceContainerHigh,
+                    searchBarBackground = cardBg
+                )
             } else {
-                val bg = Color(0xFFF7F9F2)
-                val surf = Color(0xFFFFFFFF)
-                val (container, onContainer) = WcagContrastUtil.createAccessibleContainerPair(accent.primary, isDark = false)
-                val accentText = WcagContrastUtil.getAccessibleAccentTextColor(accent.primary, bg, minRatio = 4.5)
-
-                // High Contrast Light Theme
+                // Light Mode (Stitch Exact: #1B1C1A on-surface, #4A4640 on-surface-variant, #7B766F outline, #050504 primary, #D97757 secondary terracotta)
                 LauncherColorScheme(
                     isDark = false,
                     isPureBlack = false,
                     isWarmEyeComfort = false,
-                    background = bg,
-                    surface = surf,
-                    surfaceVariant = Color(0xFFF0F2EB),
-                    surfaceElevated = Color(0xFFFFFFFF),
-                    cardBackground = Color(0xFFFFFFFF),
-                    cardBorder = Color(0xFFE1E4D5),
-                    textPrimary = Color(0xFF1A1C18),
-                    textSecondary = Color(0xFF43493E),
-                    textMuted = Color(0xFF74796D),
-                    divider = Color(0xFFE1E4D5),
-                    iconTint = Color(0xFF1A1C18),
-                    accentPrimary = accent.primary,
-                    accentOnPrimary = onPrimary,
-                    accentTextOnSurface = accentText,
-                    accentContainer = container,
-                    accentOnContainer = onContainer,
-                    chipBackground = Color(0xFFF0F2EB),
-                    searchBarBackground = Color(0xFFF0F2EB)
+                    background = Color(0xFFFBF9F6), // Stitch surface/background #FBF9F6
+                    surface = Color(0xFFFBF9F6),
+                    surfaceVariant = Color(0xFFE4E2DF), // Stitch surface-variant #E4E2DF
+                    surfaceElevated = Color(0xFFEAE8E5), // Stitch surface-container-high #EAE8E5
+                    cardBackground = Color(0xFFEFEEEB), // Stitch surface-container #EFEEEB
+                    cardBorder = Color(0xFFCCC6BD), // Stitch outline-variant #CCC6BD
+                    textPrimary = Color(0xFF1B1C1A), // Stitch on-surface #1B1C1A
+                    textSecondary = Color(0xFF4A4640), // Stitch on-surface-variant #4A4640
+                    textMuted = Color(0xFF7B766F), // Stitch outline #7B766F
+                    divider = Color(0xFFCCC6BD), // Stitch outline-variant #CCC6BD
+                    iconTint = Color(0xFF050504), // Stitch primary #050504
+                    accentPrimary = Color(0xFF050504), // Stitch primary #050504 (Warm Charcoal Black)
+                    accentOnPrimary = Color(0xFFFFFFFF), // Stitch on-primary #FFFFFF
+                    accentTextOnSurface = Color(0xFFD97757), // Stitch secondary Terracotta #D97757
+                    accentContainer = Color(0xFF1F1E1D), // Stitch primary-container #1F1E1D
+                    accentOnContainer = Color(0xFF888584),
+                    chipBackground = Color(0xFFE4E2DF), // Stitch surface-variant #E4E2DF
+                    searchBarBackground = Color(0xFFEFEEEB) // Stitch surface-container #EFEEEB
                 )
             }
         }

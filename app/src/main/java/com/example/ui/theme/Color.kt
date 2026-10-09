@@ -3,70 +3,143 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta de colores oficial del sistema de diseño 'Aetheric Minimalist' (Stitch Design System).
- * Diseñada para máxima eficiencia de batería en pantallas OLED, alto contraste de legibilidad
- * suizo-arquitectónico y micro-acentos cromáticos táctiles.
+ * Paleta de colores oficial del sistema de diseño 'Warm Minimalist' (Stitch Design System).
+ * Incluye todos los tokens para Light Mode y Dark Mode.
  */
 
 // =========================================================================
-// 1. Canvas Foundation & Background OLED
+// LIGHT MODE (Warm Minimalist)
 // =========================================================================
-val AethericOledBlack = Color(0xFF000000)          // Auténtico negro puro OLED (0% consumo de batería)
-val AethericMatteNight = Color(0xFF0C0C0E)         // Base ground mate noche (Level 0)
-val AethericSurfaceDark = Color(0xFF131315)        // Superficie base (Stitch surface / background)
+val LightSurface = Color(0xFFFBF9F6)
+val LightSurfaceDim = Color(0xFFDBDAD7)
+val LightSurfaceBright = Color(0xFFFBF9F6)
+val LightSurfaceContainerLowest = Color(0xFFFFFFFF)
+val LightSurfaceContainerLow = Color(0xFFF5F3F0)
+val LightSurfaceContainer = Color(0xFFEFEEEB)
+val LightSurfaceContainerHigh = Color(0xFFEAE8E5)
+val LightSurfaceContainerHighest = Color(0xFFE4E2DF)
+
+val LightOnSurface = Color(0xFF1B1C1A)
+val LightOnSurfaceVariant = Color(0xFF4A4640)
+val LightInverseSurface = Color(0xFF30312F)
+val LightInverseOnSurface = Color(0xFFF2F0ED)
+
+val LightOutline = Color(0xFF7B766F)
+val LightOutlineVariant = Color(0xFFCCC6BD)
+val LightSurfaceTint = Color(0xFF605E5C)
+
+val LightPrimary = Color(0xFF050504)
+val LightOnPrimary = Color(0xFFFFFFFF)
+val LightPrimaryContainer = Color(0xFF1F1E1D)
+val LightOnPrimaryContainer = Color(0xFF888584)
+val LightInversePrimary = Color(0xFFCAC6C4)
+
+val LightSecondary = Color(0xFF99462A)
+val LightOnSecondary = Color(0xFFFFFFFF)
+val LightSecondaryContainer = Color(0xFFFE9572)
+val LightOnSecondaryContainer = Color(0xFF762C12)
+
+val LightTertiary = Color(0xFF070402)
+val LightOnTertiary = Color(0xFFFFFFFF)
+val LightTertiaryContainer = Color(0xFF231D17)
+val LightOnTertiaryContainer = Color(0xFF8E847C)
+
+val LightError = Color(0xFFBA1A1A)
+val LightOnError = Color(0xFFFFFFFF)
+val LightErrorContainer = Color(0xFFFFDAD6)
+val LightOnErrorContainer = Color(0xFF93000A)
+
+val LightBackground = Color(0xFFFBF9F6)
+val LightOnBackground = Color(0xFF1B1C1A)
+
 
 // =========================================================================
-// 2. Estratificación Tonal de Superficies (Elevation & Depth)
+// DARK MODE (Warm Minimalist)
 // =========================================================================
-val AethericSurfaceLowest = Color(0xFF0E0E10)      // Contenedor de nivel más bajo
-val AethericSurfaceLow = Color(0xFF1B1B1D)         // Contenedor nivel bajo (#101010)
-val AethericSurfaceContainer = Color(0xFF201F21)   // Level 1: Cards interactivas (#0D0D0D / #141414)
-val AethericSurfaceHigh = Color(0xFF2A2A2C)        // Level 2: Modales y drawer de apps (#181818)
-val AethericSurfaceHighest = Color(0xFF353437)     // Level 3: Estados de foco / press (#1E1E1E)
-val AethericSurfaceDim = Color(0xFF131315)         // Superficie atenuada
-val AethericSurfaceBright = Color(0xFF39393B)      // Superficie iluminada
+val DarkSurface = Color(0xFF121414)
+val DarkSurfaceDim = Color(0xFF121414)
+val DarkSurfaceBright = Color(0xFF393939)
+val DarkSurfaceContainerLowest = Color(0xFF0D0E0F)
+val DarkSurfaceContainerLow = Color(0xFF1B1C1C)
+val DarkSurfaceContainer = Color(0xFF1F2020)
+val DarkSurfaceContainerHigh = Color(0xFF292A2A)
+val DarkSurfaceContainerHighest = Color(0xFF343535)
 
-// Líneas estructurales y bordes hairline (1px razor-thin divider)
-val AethericOutline = Color(0xFF262626)            // Borde hairline sutil para delimitar tarjetas
-val AethericOutlineVariant = Color(0xFF444749)     // Borde secundario visible
-val AethericOutlineMedium = Color(0xFF8E9193)
+val DarkOnSurface = Color(0xFFE3E2E2)
+val DarkOnSurfaceVariant = Color(0xFFC4C7C7)
+val DarkInverseSurface = Color(0xFFE3E2E2)
+val DarkInverseOnSurface = Color(0xFF303031)
+
+val DarkOutline = Color(0xFF8E9192)
+val DarkOutlineVariant = Color(0xFF444748)
+val DarkSurfaceTint = Color(0xFFC7C6C6)
+
+val DarkPrimary = Color(0xFFC7C6C6)
+val DarkOnPrimary = Color(0xFF303031)
+val DarkPrimaryContainer = Color(0xFF919090)
+val DarkOnPrimaryContainer = Color(0xFF292A2A)
+val DarkInversePrimary = Color(0xFF5E5E5E)
+
+val DarkSecondary = Color(0xFFC7C6C6)
+val DarkOnSecondary = Color(0xFF303031)
+val DarkSecondaryContainer = Color(0xFF464747)
+val DarkOnSecondaryContainer = Color(0xFFB6B5B5)
+
+val DarkTertiary = Color(0xFFC7C6C6)
+val DarkOnTertiary = Color(0xFF303031)
+val DarkTertiaryContainer = Color(0xFF919090)
+val DarkOnTertiaryContainer = Color(0xFF292A2A)
+
+val DarkError = Color(0xFFFFB4AB)
+val DarkOnError = Color(0xFF690005)
+val DarkErrorContainer = Color(0xFF93000A)
+val DarkOnErrorContainer = Color(0xFFFFDAD6)
+
+val DarkBackground = Color(0xFF121414)
+val DarkOnBackground = Color(0xFFE3E2E2)
 
 // =========================================================================
-// 3. Primario Verde (Forest Sage)
+// Legacy / General Colors
 // =========================================================================
-val AethericForestSage = Color(0xFF386B1F)         // Tinte primario: indicadores, streaks, foco, checks
-val AethericForestSageContainer = Color(0xFF225408)// Contenedor verde profundo
-val AethericForestSageLight = Color(0xFF9CD67D)    // Tinte verde claro para contraste en modo noche
-val AethericForestSageFixed = Color(0xFFB7F396)    // Resalte verde fijo
-val AethericForestSageOnContainer = Color(0xFF8EC870)
-val AethericForestSageOnPrimary = Color(0xFF113800)
+val Transparent = Color(0x00000000)
+val Black = Color(0xFF000000)
+val White = Color(0xFFFFFFFF)
 
-// =========================================================================
-// 4. Acento Ámbar (Solar Dawn Amber)
-// =========================================================================
-val AethericSolarAmber = Color(0xFFFFD54F)         // Insignias circadianas, transición amanecer/atardecer
-val AethericSolarAmberContainer = Color(0xFFFFE087)
-val AethericSolarAmberDim = Color(0xFFEBC23E)
-val AethericSolarAmberOnContainer = Color(0xFF7A6100)
+// Fallbacks to avoid breaking other screens
+val AethericOledBlack = DarkBackground
+val AethericMatteNight = DarkBackground
+val AethericSurfaceDark = DarkSurface
+val AethericSurfaceLowest = DarkSurfaceContainerLowest
+val AethericSurfaceLow = DarkSurfaceContainerLow
+val AethericSurfaceContainer = DarkSurfaceContainer
+val AethericSurfaceHigh = DarkSurfaceContainerHigh
+val AethericSurfaceHighest = DarkSurfaceContainerHighest
+val AethericSurfaceDim = DarkSurfaceDim
+val AethericSurfaceBright = DarkSurfaceBright
+val AethericOutline = DarkOutline
+val AethericOutlineVariant = DarkOutlineVariant
+val AethericOutlineMedium = DarkOutlineVariant
+val AethericForestSage = DarkPrimary
+val AethericForestSageContainer = DarkPrimaryContainer
+val AethericForestSageLight = DarkPrimary
+val AethericForestSageFixed = DarkPrimary
+val AethericForestSageOnContainer = DarkOnPrimaryContainer
+val AethericForestSageOnPrimary = DarkOnPrimary
+val AethericSolarAmber = DarkPrimary
+val AethericSolarAmberContainer = DarkPrimaryContainer
+val AethericSolarAmberDim = DarkPrimaryContainer
+val AethericSolarAmberOnContainer = DarkOnPrimaryContainer
+val AethericTextOffWhite = DarkOnSurface
+val AethericTextPureWhite = DarkOnSurface
+val AethericTextStone = DarkOnSurfaceVariant
+val AethericTextMutedZinc = DarkOutline
+val AethericTextPebble = DarkOutlineVariant
+val AethericTextSubtle = DarkOutlineVariant
+val AethericTextInverse = DarkInverseOnSurface
 
-// =========================================================================
-// 5. Escala de Grises Tipográfica (Text & Foreground)
-// =========================================================================
-val AethericTextOffWhite = Color(0xFFF4F4F5)       // Alto contraste: Reloj principal, títulos hero y selección
-val AethericTextPureWhite = Color(0xFFFFFFFF)      // Blanco puro para glifos e iconos destacados
-val AethericTextStone = Color(0xFFA1A1AA)          // Gris piedra: etiquetas secundarias, metadatos, prefijos
-val AethericTextMutedZinc = Color(0xFFA1A1AA)      // Gris zinc suave para metadatos y categorías
-val AethericTextPebble = Color(0xFF71717A)         // Gris guijarro: pistas inactivas, iconos de búsqueda, guías
-val AethericTextSubtle = Color(0xFF444749)         // Elementos desactivados o marcas menores
-val AethericTextInverse = Color(0xFF1A1C1D)
-
-// =========================================================================
-// 6. Compatibilidad y Aliases de Material Theme
-// =========================================================================
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
-
 val Purple40 = Color(0xFF6650A4)
 val PurpleGrey40 = Color(0xFF625B71)
 val Pink40 = Color(0xFF7D5260)

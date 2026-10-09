@@ -29,8 +29,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.example.LauncherViewModel
 import com.example.ui.theme.*
+import com.example.util.WellbeingHelper
 import kotlinx.coroutines.delay
 
 @Composable
@@ -41,7 +43,13 @@ fun WellbeingScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val wb = state.wellbeingConfig
+    val context = LocalContext.current
+    val usageSummary = state.todayUsageSummary
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTodayUsageStats()
+    }
 
     // Breathing interactive state for Micro-pausa guiada
     var isBreathing by remember { mutableStateOf(false) }
@@ -157,6 +165,49 @@ fun WellbeingScreen(
             )
         }
 
+        if (!usageSummary.hasPermission) {
+            Surface(
+                color = AethericForestSageContainer.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(1.dp, AethericForestSageLight.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { WellbeingHelper.openUsageAccessSettings(context) }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LockOpen,
+                        contentDescription = null,
+                        tint = AethericForestSageLight,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Activar Tiempo de Pantalla Real",
+                            style = TextStyle(
+                                fontFamily = InterFontFamily,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AethericTextOffWhite
+                            )
+                        )
+                        Text(
+                            text = "Toca para conceder acceso a estadísticas de uso del sistema Android.",
+                            style = TextStyle(
+                                fontFamily = InterFontFamily,
+                                fontSize = 11.sp,
+                                color = AethericTextStone
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
         // 1. Hero Screen Time Metric Block
         Surface(
             color = AethericSurfaceLow,
@@ -194,7 +245,7 @@ fun WellbeingScreen(
                                 modifier = Modifier.size(13.dp)
                             )
                             Text(
-                                text = "-42% vs semanal",
+                                text = if (usageSummary.hasPermission) "Tiempo Real" else "Demostración",
                                 style = TextStyle(
                                     fontFamily = JetBrainsMonoFontFamily,
                                     fontSize = 11.sp,
@@ -210,8 +261,17 @@ fun WellbeingScreen(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val totalDisplay = if (usageSummary.hasPermission) {
+                        val mins = usageSummary.totalScreenTimeMs / (1000 * 60)
+                        val hrs = mins / 60
+                        val remMins = mins % 60
+                        if (hrs > 0) "${hrs}h ${remMins}m" else "${remMins}m"
+                    } else {
+                        "1h 18m"
+                    }
+
                     Text(
-                        text = "1h 18m",
+                        text = totalDisplay,
                         style = AethericTypography.clockDisplayMobile.copy(
                             fontSize = 60.sp,
                             letterSpacing = (-2.5).sp,
@@ -239,34 +299,42 @@ fun WellbeingScreen(
                             .clip(RoundedCornerShape(9999.dp))
                             .background(AethericSurfaceHighest)
                     ) {
-                        // WhatsApp (41%)
-                        Box(
-                            modifier = Modifier
-                                .weight(0.41f)
-                                .fillMaxHeight()
-                                .background(AethericTextOffWhite)
-                        )
-                        // Lector Kindle (26%)
-                        Box(
-                            modifier = Modifier
-                                .weight(0.26f)
-                                .fillMaxHeight()
-                                .background(AethericForestSageLight)
-                        )
-                        // Teléfono (23%)
-                        Box(
-                            modifier = Modifier
-                                .weight(0.23f)
-                                .fillMaxHeight()
-                                .background(AethericTextStone)
-                        )
-                        // Otras (10%)
-                        Box(
-                            modifier = Modifier
-                                .weight(0.10f)
-                                .fillMaxHeight()
-                                .background(AethericSurfaceHighest)
-                        )
+                        if (usageSummary.hasPermission && usageSummary.topApps.isNotEmpty()) {
+                            val total = usageSummary.totalScreenTimeMs.toFloat().coerceAtLeast(1.0f)
+                            usageSummary.topApps.forEachIndexed { index, app ->
+                                val weight = (app.totalTimeInForegroundMs.toFloat() / total).coerceAtLeast(0.05f)
+                                val color = when (index) {
+                                    0 -> AethericTextOffWhite
+                                    1 -> AethericForestSageLight
+                                    else -> AethericTextStone
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(weight)
+                                        .fillMaxHeight()
+                                        .background(color)
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .weight(0.41f)
+                                    .fillMaxHeight()
+                                    .background(AethericTextOffWhite)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .weight(0.26f)
+                                    .fillMaxHeight()
+                                    .background(AethericForestSageLight)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .weight(0.33f)
+                                    .fillMaxHeight()
+                                    .background(AethericTextStone)
+                            )
+                        }
                     }
 
                     Row(
@@ -316,7 +384,7 @@ fun WellbeingScreen(
                         color = AethericTextMutedZinc
                     )
                     Text(
-                        text = "4 Apps activas",
+                        text = if (usageSummary.hasPermission) "${usageSummary.topApps.size} Apps leídas" else "4 Apps activas",
                         style = TextStyle(
                             fontFamily = JetBrainsMonoFontFamily,
                             fontSize = 10.sp,
@@ -326,54 +394,68 @@ fun WellbeingScreen(
                     )
                 }
 
-                // Row 1: WhatsApp
-                AppUsageRow(
-                    tag = "WA",
-                    tagColor = AethericTextOffWhite,
-                    name = "WhatsApp",
-                    subtitle = "Límite: 45 min · 13m restantes",
-                    duration = "32 min",
-                    durationColor = AethericTextOffWhite,
-                    progressPercent = 0.71f,
-                    barColor = AethericTextOffWhite
-                )
+                if (usageSummary.hasPermission && usageSummary.topApps.isNotEmpty()) {
+                    usageSummary.topApps.forEachIndexed { index, app ->
+                        val mins = app.totalTimeInForegroundMs / (1000 * 60)
+                        val hrs = mins / 60
+                        val remMins = mins % 60
+                        val durStr = if (hrs > 0) "${hrs}h ${remMins}m" else "${remMins}m"
+                        val color = when (index) {
+                            0 -> AethericTextOffWhite
+                            1 -> AethericForestSageLight
+                            else -> AethericTextStone
+                        }
+                        val percent = if (usageSummary.totalScreenTimeMs > 0)
+                            (app.totalTimeInForegroundMs.toFloat() / usageSummary.totalScreenTimeMs.toFloat()).coerceIn(0.1f, 1.0f)
+                        else 0.5f
 
-                // Row 2: Lector Kindle
-                AppUsageRow(
-                    tag = "KD",
-                    tagColor = AethericForestSageLight,
-                    name = "Lector Kindle",
-                    subtitle = "Lectura profunda",
-                    subtitleColor = AethericForestSageLight,
-                    duration = "20 min",
-                    durationColor = AethericForestSageLight,
-                    progressPercent = 1.0f,
-                    barColor = AethericForestSageLight
-                )
+                        AppUsageRow(
+                            tag = app.appName.take(2).uppercase(),
+                            tagColor = color,
+                            name = app.appName,
+                            subtitle = app.packageName,
+                            duration = durStr,
+                            durationColor = color,
+                            progressPercent = percent,
+                            barColor = color
+                        )
+                    }
+                } else {
+                    // Fallback / Demo Rows
+                    AppUsageRow(
+                        tag = "WA",
+                        tagColor = AethericTextOffWhite,
+                        name = "WhatsApp",
+                        subtitle = "Límite: 45 min · 13m restantes",
+                        duration = "32 min",
+                        durationColor = AethericTextOffWhite,
+                        progressPercent = 0.71f,
+                        barColor = AethericTextOffWhite
+                    )
 
-                // Row 3: Teléfono
-                AppUsageRow(
-                    tag = "TL",
-                    tagColor = AethericTextStone,
-                    name = "Teléfono",
-                    subtitle = "Voz / Esenciales",
-                    duration = "18 min",
-                    durationColor = AethericTextStone,
-                    progressPercent = 0.40f,
-                    barColor = AethericTextStone
-                )
+                    AppUsageRow(
+                        tag = "KD",
+                        tagColor = AethericForestSageLight,
+                        name = "Lector Kindle",
+                        subtitle = "Lectura profunda",
+                        subtitleColor = AethericForestSageLight,
+                        duration = "20 min",
+                        durationColor = AethericForestSageLight,
+                        progressPercent = 1.0f,
+                        barColor = AethericForestSageLight
+                    )
 
-                // Row 4: Otras apps
-                AppUsageRow(
-                    tag = "++",
-                    tagColor = AethericTextMutedZinc,
-                    name = "Otras apps",
-                    subtitle = "Ajustes, Reloj",
-                    duration = "8 min",
-                    durationColor = AethericTextMutedZinc,
-                    progressPercent = 0.18f,
-                    barColor = AethericSurfaceHighest
-                )
+                    AppUsageRow(
+                        tag = "TL",
+                        tagColor = AethericTextStone,
+                        name = "Teléfono",
+                        subtitle = "Voz / Esenciales",
+                        duration = "18 min",
+                        durationColor = AethericTextStone,
+                        progressPercent = 0.40f,
+                        barColor = AethericTextStone
+                    )
+                }
             }
         }
 

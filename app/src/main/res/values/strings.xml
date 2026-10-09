@@ -1,4 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Minimalist Launcher</string>
-    <string name="accessibility_service_description">Permite a Minimalist Launcher bloquear la pantalla y desplegar las notificaciones mediante gestos táctiles.</string>
+    <string name="accessibility_service_description">Allows Minimalist Launcher to lock the screen and pull down notifications using touch gestures.</string>
+
+    <!-- Navigation Tabs -->
+    <string name="tab_surface">Surface</string>
+    <string name="tab_drawer">Drawer</string>
+    <string name="tab_glance">Glance</string>
+    <string name="tab_prefs">Prefs</string>
+
+    <!-- Home Screen -->
+    <string name="mindful_space">Mindful Space</string>
+    <string name="zen_active">Zen Active</string>
+    <string name="intention_placeholder">What is your intention today?</string>
+    <string name="screen_peace">Screen Peace</string>
+    <string name="screen_peace_stat">1h 12m</string>
+    <string name="screen_peace_vs">↓ 42% vs yesterday</string>
+    <string name="soundscape">Soundscape</string>
+    <string name="soundscape_title">Warm Amber</string>
+    <string name="soundscape_artist">Brian Eno • Ambient</string>
+    <string name="essentials_title">ESSENTIALS</string>
+    <string name="essentials_count">5 Focus Tools</string>
+    <string name="app_phone">Phone</string>
+    <string name="app_chat">Chat</string>
+    <string name="app_browser">Browser</string>
+    <string name="app_reflect">Reflect</string>
+    <string name="app_lens">Lens</string>
+    <string name="quote_text">“Clarity comes from what you choose to ignore.”</string>
+    <string name="quote_author">Quiet Mind Protocol • Moto Edge 50</string>
+    <string name="swipe_up_hint">SWIPE UP FOR ALL APPS</string>
+
+    <!-- App Drawer -->
+    <string name="app_drawer_title">APP DRAWER</string>
+    <string name="apps_available">%1$d apps available</string>
+    <string name="search_apps_placeholder">Search apps or categories...</string>
+    <string name="no_apps_found">No matches found for \"%1$s\"</string>
+    <string name="cat_all">ALL</string>
+    <string name="cat_productivity">PRODUCTIVITY</string>
+    <string name="cat_tools">TOOLS</string>
+    <string name="cat_social">SOCIAL</string>
+    <string name="cat_media">MEDIA</string>
+
+    <!-- Launcher Settings -->
+    <string name="prefs_device_title">MOTOROLA EDGE 50 NEO</string>
+    <string name="prefs_screen_title">Launcher Preferences</string>
+    <string name="mindful_surface_title">MINDFUL SURFACE</string>
+    <string name="poled_active_badge">pOLED ACTIVE</string>
+    <string name="mindful_surface_desc">Tactile restraint calibrated specifically for your 120Hz 1.5K pOLED panel. Zero diode draw in pure black areas with soft obsidian luminosity.</string>
+
+    <string name="group_desktop_layout">DESKTOP &amp; LAYOUT</string>
+    <string name="group_ergonomics">Ergonomics</string>
+    <string name="setting_workspace_grid">Workspace Grid</string>
+    <string name="setting_workspace_grid_desc">Density of home pebbles</string>
+    <string name="setting_icon_size">Icon Geometry Size</string>
+    <string name="setting_widget_breathing_room">Widget Breathing Room</string>
+    <string name="setting_show_status_bar">Show Status Bar</string>
+    <string name="setting_show_status_bar_desc">Time, battery, and signal glyphs</string>
+
+    <string name="group_appearance">APPEARANCE</string>
+    <string name="group_poled_tiers">pOLED Tiers</string>
+    <string name="setting_surface_palette">Surface Palette</string>
+    <string name="palette_warm_ivory">Warm Ivory</string>
+    <string name="palette_slate_stone">Slate Stone</string>
+    <string name="palette_deep_charcoal">Deep Charcoal</string>
+    <string name="setting_frosted_glass">Frosted Glass Intensity</string>
+    <string name="setting_typographic_voice">Typographic Voice</string>
+
+    <string name="group_gestures">TACTILE GESTURES</string>
+    <string name="group_edge_sense">Edge Sense</string>
+    <string name="gesture_swipe_up">Swipe Up</string>
+    <string name="gesture_swipe_up_desc">Vertical gesture on canvas</string>
+    <string name="gesture_double_tap">Double Tap</string>
+    <string name="gesture_double_tap_desc">Rapid tap on blank obsidian space</string>
+    <string name="gesture_swipe_down">Swipe Down</string>
+    <string name="gesture_swipe_down_desc">Anywhere on main home pane</string>
+
+    <string name="group_iconography">ICONOGRAPHY &amp; CLARITY</string>
+    <string name="group_visual_order">Visual Order</string>
+    <string name="setting_monochromatic">Force Monochromatic Icons</string>
+    <string name="setting_monochromatic_desc">Cast all third-party app assets to linen white glyphs</string>
+    <string name="setting_hide_labels">Hide Workspace Labels</string>
+    <string name="setting_hide_labels_desc">Omit text underneath home launcher pebbles</string>
+    <string name="setting_suppress_dots">Suppress Unread Dots</string>
+    <string name="setting_suppress_dots_desc">Eliminate red notification counter badges</string>
+
+    <string name="group_mindful_mode">MINDFUL MODE</string>
+    <string name="group_wellbeing">Digital Well-being</string>
+    <string name="setting_usage_prompts">Subtle Usage Prompts</string>
+    <string name="setting_usage_prompts_desc">Soft micro-haptics when opening social feeds</string>
+    <string name="setting_evening_grayscale">Evening Grayscale</string>
+    <string name="setting_evening_grayscale_desc">Monochrome fade into night sleep</string>
+
+    <string name="btn_reset_defaults">Reset to Motorola Minimalist Defaults</string>
+    <string name="build_version_info">Warm Obsidian Launcher • Build 5.4.1 (Neo Edition)</string>
 </resources>

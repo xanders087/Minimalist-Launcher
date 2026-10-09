@@ -1,14 +1,28 @@
 package com.example
 
 import java.util.UUID
+import android.Manifest
 import android.app.Application
+import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import androidx.core.content.ContextCompat
+import com.example.util.CalendarHelper
+import com.example.util.WellbeingHelper
+import com.example.util.TodayUsageSummary
+import com.example.util.WeatherApiHelper
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -81,11 +95,11 @@ data class LauncherState(
     val isAiCategorizing: Boolean = false,
     val aiCategorizationMessage: String? = null,
     val accentTheme: AccentTheme = AccentTheme.ForestSage,
-    val themeMode: ThemeMode = ThemeMode.AUTO_SUNSET_SUNRISE,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val themeVariant: AethericThemeVariant = AethericThemeVariant.OLED_PURO,
     val typographyChoice: AethericFontFamilyChoice = AethericFontFamilyChoice.SANS,
-    val isDarkThemeActive: Boolean = false,
-    val isPureBlack: Boolean = false,
+    val isDarkThemeActive: Boolean = true,
+    val isPureBlack: Boolean = true,
     val isWarmEyeComfort: Boolean = false,
     val selectedSolarLocation: SolarLocation = SolarLocation.DefaultLocations.first(),
     val solarTimes: SolarTimes = SolarScheduleCalculator.calculateSolarTimes(),
@@ -111,7 +125,8 @@ data class LauncherState(
     val wallpaperConfig: WallpaperConfig = WallpaperConfig(),
     val homeScreenElements: HomeScreenElementsConfig = HomeScreenElementsConfig(),
     val gesturesConfig: GesturesConfig = GesturesConfig(),
-    val wellbeingConfig: WellbeingConfig = WellbeingConfig()
+    val wellbeingConfig: WellbeingConfig = WellbeingConfig(),
+    val todayUsageSummary: TodayUsageSummary = TodayUsageSummary(0L, emptyList(), false)
 ) {
     val visibleApps: List<AppInfo>
         get() = apps.filter { it.packageName !in hiddenPackages }
@@ -180,10 +195,13 @@ class LauncherViewModel(
         loadWallpaperPreferences()
         loadWidgetPreferences()
         loadBatteryAndStorage()
+        loadSystemCalendarEvents()
         initInitialLaunchStats()
         loadHiddenPackages()
         loadGesturesPreferences()
         loadWellbeingPreferences()
+        loadTodayUsageStats()
+        refreshWeather()
         appRepository.startObserving()
         observeAppRepository()
         loadApps()
@@ -191,24 +209,24 @@ class LauncherViewModel(
     }
 
     private fun loadThemeModePreferences() {
-        val modeName = prefs.getString("theme_mode", ThemeMode.AUTO_SUNSET_SUNRISE.name) ?: ThemeMode.AUTO_SUNSET_SUNRISE.name
-        val themeMode = try {
-            ThemeMode.valueOf(modeName)
-        } catch (e: Exception) {
-            ThemeMode.AUTO_SUNSET_SUNRISE
-        }
-
-        val isPureBlack = prefs.getBoolean("theme_pure_black", false)
-        val isWarmComfort = prefs.getBoolean("theme_warm_comfort", false)
-        val locationName = prefs.getString("solar_location_name", SolarLocation.DefaultLocations.first().name)
-        val solarLocation = SolarLocation.DefaultLocations.firstOrNull { it.name == locationName } ?: SolarLocation.DefaultLocations.first()
-
         val variantName = prefs.getString("pref_theme_variant", AethericThemeVariant.OLED_PURO.name)
         val themeVariant = try {
             AethericThemeVariant.valueOf(variantName ?: AethericThemeVariant.OLED_PURO.name)
         } catch (e: Exception) {
             AethericThemeVariant.OLED_PURO
         }
+
+        val modeName = prefs.getString("theme_mode", ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
+        val themeMode = try {
+            ThemeMode.valueOf(modeName)
+        } catch (e: Exception) {
+            ThemeMode.SYSTEM
+        }
+
+        val isPureBlack = prefs.getBoolean("theme_pure_black", true)
+        val isWarmComfort = prefs.getBoolean("theme_warm_comfort", false)
+        val locationName = prefs.getString("solar_location_name", SolarLocation.DefaultLocations.first().name)
+        val solarLocation = SolarLocation.DefaultLocations.firstOrNull { it.name == locationName } ?: SolarLocation.DefaultLocations.first()
 
         val fontName = prefs.getString("pref_typography_choice", AethericFontFamilyChoice.SANS.name)
         val typographyChoice = try {
@@ -515,6 +533,30 @@ class LauncherViewModel(
         prefs.edit().putBoolean("weather_is_celsius", nextIsCelsius).apply()
         _state.update { it.copy(weatherData = it.weatherData.copy(isCelsius = nextIsCelsius)) }
     }
+    
+    fun updateLocationAndWeather(city: String, latitude: Double, longitude: Double) {
+        val location = SolarLocation(city, latitude, longitude)
+        setSolarLocation(location)
+        
+        viewModelScope.launch {
+            val liveData = WeatherApiHelper.fetchLiveWeather(latitude, longitude)
+            if (liveData != null) {
+                updateWeather(city, liveData.tempF, liveData.condition, liveData.maxTempF, liveData.minTempF)
+            } else {
+                updateWeather(city, _state.value.weatherData.temperatureF, _state.value.weatherData.condition, _state.value.weatherData.highF, _state.value.weatherData.lowF)
+            }
+        }
+    }
+
+    fun refreshWeather() {
+        val currentLoc = _state.value.selectedSolarLocation
+        viewModelScope.launch {
+            val liveData = WeatherApiHelper.fetchLiveWeather(currentLoc.latitude, currentLoc.longitude)
+            if (liveData != null) {
+                updateWeather(currentLoc.name, liveData.tempF, liveData.condition, liveData.maxTempF, liveData.minTempF)
+            }
+        }
+    }
 
     fun updateWeather(city: String, tempF: Int, condition: String, highF: Int, lowF: Int) {
         prefs.edit()
@@ -537,21 +579,121 @@ class LauncherViewModel(
         }
     }
 
-    fun addCalendarEvent(title: String, time: String, location: String? = null) {
+    fun addCalendarEvent(title: String, time: String, location: String = "") {
         val newEvent = CalendarEvent(
             id = UUID.randomUUID().toString(),
-            title = title.trim(),
-            time = time.trim(),
-            location = location?.trim()?.ifBlank { null }
+            title = title,
+            time = time,
+            location = location
         )
-        _state.update {
-            it.copy(calendarEvents = listOf(newEvent) + it.calendarEvents)
+        _state.update { current ->
+            current.copy(calendarEvents = listOf(newEvent) + current.calendarEvents)
         }
     }
 
-    fun removeCalendarEvent(eventId: String) {
-        _state.update {
-            it.copy(calendarEvents = it.calendarEvents.filterNot { event -> event.id == eventId })
+    fun loadSystemCalendarEvents() {
+        val app = getApplication<Application>()
+        if (ContextCompat.checkSelfPermission(app, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
+            viewModelScope.launch {
+                try {
+                    val events = CalendarHelper.getUpcomingEvents(app)
+                    _state.update { it.copy(calendarEvents = events) }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    fun loadTodayUsageStats() {
+        val app = getApplication<Application>()
+        viewModelScope.launch(Dispatchers.IO) {
+            val summary = WellbeingHelper.getTodayUsageSummary(app)
+            _state.update { it.copy(todayUsageSummary = summary) }
+        }
+    }
+
+    fun uninstallApp(context: Context, packageName: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:$packageName")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun applySystemWallpaperColor(context: Context, colorInt: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val wallpaperManager = WallpaperManager.getInstance(context)
+                val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                canvas.drawColor(colorInt)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
+                } else {
+                    wallpaperManager.setBitmap(bitmap)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun applySystemWallpaper(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val wallpaperManager = WallpaperManager.getInstance(context)
+                val config = _state.value.wallpaperConfig
+
+                when (config.mode) {
+                    WallpaperMode.SOLID -> {
+                        val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
+                        val canvas = Canvas(bitmap)
+                        val accentColor = _state.value.accentTheme.primaryColorLong
+                        canvas.drawColor(accentColor.toInt())
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
+                        } else {
+                            wallpaperManager.setBitmap(bitmap)
+                        }
+                    }
+                    WallpaperMode.STATIC, WallpaperMode.DAILY -> {
+                        val path = config.currentWallpaperPath ?: config.staticWallpaperPath
+                        if (!path.isNullOrBlank()) {
+                            val file = File(path)
+                            if (file.exists()) {
+                                file.inputStream().use { stream ->
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        wallpaperManager.setStream(stream, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
+                                    } else {
+                                        wallpaperManager.setStream(stream)
+                                    }
+                                }
+                            } else if (path.startsWith("http")) {
+                                val url = URL(path)
+                                val connection = url.openConnection() as HttpURLConnection
+                                connection.connectTimeout = 10000
+                                connection.readTimeout = 10000
+                                if (connection.responseCode == 200) {
+                                    connection.inputStream.use { stream ->
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                            wallpaperManager.setStream(stream, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
+                                        } else {
+                                            wallpaperManager.setStream(stream)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

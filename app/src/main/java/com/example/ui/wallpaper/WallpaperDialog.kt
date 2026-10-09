@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -1047,7 +1048,10 @@ fun WallpaperDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable { onDismissRequest() }
+                        .clickable {
+                            viewModel.applySystemWallpaper(context)
+                            onDismissRequest()
+                        }
                         .testTag("btn_wallpaper_done")
                 ) {
                     Box(
@@ -1055,7 +1059,7 @@ fun WallpaperDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Aplicar y Continuar",
+                            text = "Aplicar al Teléfono y Pantalla de Bloqueo",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = accent.onPrimary
