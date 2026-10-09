@@ -33,13 +33,42 @@
     <!-- App Drawer -->
     <string name="app_drawer_title">APP DRAWER</string>
     <string name="apps_available">%1$d apps available</string>
-    <string name="search_apps_placeholder">Search apps or categories...</string>
+    <string name="search_apps_placeholder">Search apps, actions, notes…</string>
     <string name="no_apps_found">No matches found for \"%1$s\"</string>
+    <string name="frequent">Frequent</string>
+    <string name="predictive">PREDICTIVE</string>
+    <string name="focus_mode_ready">Focus Mode Ready</string>
+    <string name="zero_unread_notifs">Zero unread notifications requiring immediate attention</string>
+    <string name="eco_badge">pOLED Eco</string>
     <string name="cat_all">ALL</string>
-    <string name="cat_productivity">PRODUCTIVITY</string>
-    <string name="cat_tools">TOOLS</string>
-    <string name="cat_social">SOCIAL</string>
+    <string name="cat_essentials">ESSENTIALS</string>
+    <string name="cat_productivity">WORK</string>
+    <string name="cat_tools">FOCUS</string>
+    <string name="cat_social">RECENT</string>
     <string name="cat_media">MEDIA</string>
+
+    <!-- Glance Feed -->
+    <string name="ambient_feed_title">Motorola Ambient Feed</string>
+    <string name="claude_synthesis">Claude Synthesis</string>
+    <string name="greeting_alex">Good morning, Alex.</string>
+    <string name="greeting_sub">You have 3 intentional tasks and 1 focus window reserved before midday.</string>
+    <string name="thought_resonance">Thought Resonance</string>
+    <string name="offline_sync">Offline Sync</string>
+    <string name="capture_thought_placeholder">Capture a thought or ask Claude…</string>
+    <string name="pill_summarize_notes">Summarize today\'s notes</string>
+    <string name="pill_draft_outline">Draft thesis outline</string>
+    <string name="next_appointment">Next Appointment</string>
+    <string name="in_28_mins">In 28 mins</string>
+    <string name="event_title">Architecture Sync: Spatial UI &amp; Intent</string>
+    <string name="event_time">10:30 – 11:15 AM • Studio 4B or Meet</string>
+    <string name="btn_decline">Decline</string>
+    <string name="btn_join_call">Join Call</string>
+    <string name="atmospheric_glance">Atmospheric Glance</string>
+    <string name="location_sample">Zurich Studio</string>
+    <string name="temp_sample">19°</string>
+    <string name="feels_sample">Feels 18°</string>
+    <string name="weather_condition_sample">Temperate &amp; Gentle Breeze</string>
+    <string name="aqi_sample">AQI 24 • Pure</string>
 
     <!-- Launcher Settings -->
     <string name="prefs_device_title">MOTOROLA EDGE 50 NEO</string>

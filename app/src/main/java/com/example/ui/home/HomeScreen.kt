@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.example.LauncherState
 import com.example.LauncherViewModel
 import com.example.R
+import com.example.ui.glance.GlanceScreen
 import com.example.ui.presentation.LauncherScreen
 import com.example.ui.settings.LauncherSettingsScreen
 import com.example.ui.settings.SettingsDialog
@@ -139,15 +140,11 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                     viewModel = viewModel,
                     onAppSelected = { currentTab = "Surface" }
                 )
-                "Glance" -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = stringResource(R.string.tab_glance),
-                            color = LauncherTheme.colors.textPrimary,
-                            fontFamily = activeFontFamily
-                        )
-                    }
-                }
+                "Glance" -> GlanceScreen(
+                    viewModel = viewModel,
+                    fontFamily = activeFontFamily,
+                    scale = state.appLabelTextScale
+                )
                 "Prefs" -> LauncherSettingsScreen(
                     viewModel = viewModel,
                     onBack = { currentTab = "Surface" }

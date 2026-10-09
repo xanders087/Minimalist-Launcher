@@ -35,11 +35,40 @@
     <string name="apps_available">%1$d aplicaciones disponibles</string>
     <string name="search_apps_placeholder">Buscar por nombre o categoría…</string>
     <string name="no_apps_found">No se encontraron coincidencias para \"%1$s\"</string>
+    <string name="frequent">Frecuentes</string>
+    <string name="predictive">PREDICTIVO</string>
+    <string name="focus_mode_ready">Modo Enfoque Listo</string>
+    <string name="zero_unread_notifs">Sin notificaciones pendientes que requieran atención</string>
+    <string name="eco_badge">Eco pOLED</string>
     <string name="cat_all">TODAS</string>
-    <string name="cat_productivity">PRODUCTIVIDAD</string>
-    <string name="cat_tools">HERRAMIENTAS</string>
-    <string name="cat_social">SOCIAL</string>
+    <string name="cat_essentials">ESENCIALES</string>
+    <string name="cat_productivity">TRABAJO</string>
+    <string name="cat_tools">ENFOQUE</string>
+    <string name="cat_social">RECIENTES</string>
     <string name="cat_media">MULTIMEDIA</string>
+
+    <!-- Glance Feed -->
+    <string name="ambient_feed_title">Feed Ambiental Motorola</string>
+    <string name="claude_synthesis">Síntesis de Claude</string>
+    <string name="greeting_alex">Buenos días, Alex.</string>
+    <string name="greeting_sub">Tienes 3 tareas intencionales y 1 bloque de enfoque reservado antes del mediodía.</string>
+    <string name="thought_resonance">Resonancia de Pensamiento</string>
+    <string name="offline_sync">Sincronización Offline</string>
+    <string name="capture_thought_placeholder">Captura un pensamiento o consulta a Claude…</string>
+    <string name="pill_summarize_notes">Resumir notas de hoy</string>
+    <string name="pill_draft_outline">Borrador de estructura</string>
+    <string name="next_appointment">Siguiente Cita</string>
+    <string name="in_28_mins">En 28 mins</string>
+    <string name="event_title">Sincronización de Arquitectura: UI Espacial</string>
+    <string name="event_time">10:30 – 11:15 AM • Estudio 4B o Meet</string>
+    <string name="btn_decline">Rechazar</string>
+    <string name="btn_join_call">Unirse a Llamada</string>
+    <string name="atmospheric_glance">Visión Atmosférica</string>
+    <string name="location_sample">Estudio Zurich</string>
+    <string name="temp_sample">19°</string>
+    <string name="feels_sample">Sensación 18°</string>
+    <string name="weather_condition_sample">Templado y brisa suave</string>
+    <string name="aqi_sample">ICA 24 • Puro</string>
 
     <!-- Launcher Settings -->
     <string name="prefs_device_title">MOTOROLA EDGE 50 NEO</string>

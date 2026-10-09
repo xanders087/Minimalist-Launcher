@@ -1,6 +1,5 @@
 package com.example.ui.presentation
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -23,6 +22,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,18 +40,24 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.AppInfo
+import com.example.LauncherState
 import com.example.LauncherViewModel
 import com.example.R
 import com.example.data.model.AppItem
 import com.example.domain.launcher.LaunchResult
 import com.example.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
- * Pantalla de presentación y cajón de búsqueda del Launcher según el marco 'Cajón de Aplicaciones' (Stitch).
- * Totalmente internacionalizado y adaptativo al idioma del sistema del teléfono.
+ * Pantalla de presentación y cajón de búsqueda del Launcher según la especificación exacta de Stitch.
+ * Réplica exacta en cuadrícula de 4 columnas para Light Mode y Dark Mode.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -69,14 +75,14 @@ fun LauncherScreen(
     val rawFilteredApps by viewModel.debouncedFilteredApps.collectAsState()
 
     val catAll = stringResource(R.string.cat_all)
-    val catProd = stringResource(R.string.cat_productivity)
-    val catTools = stringResource(R.string.cat_tools)
-    val catSocial = stringResource(R.string.cat_social)
-    val catMedia = stringResource(R.string.cat_media)
+    val catEssentials = stringResource(R.string.cat_essentials)
+    val catWork = stringResource(R.string.cat_productivity)
+    val catFocus = stringResource(R.string.cat_tools)
+    val catRecent = stringResource(R.string.cat_social)
 
     var selectedCategory by remember { mutableStateOf(catAll) }
-    val categories = remember(catAll, catProd, catTools, catSocial, catMedia) {
-        listOf(catAll, catProd, catTools, catSocial, catMedia)
+    val categories = remember(catAll, catEssentials, catWork, catFocus, catRecent) {
+        listOf(catAll, catEssentials, catWork, catFocus, catRecent)
     }
 
     val activeFontFamily = when (state.typographyChoice) {
@@ -91,7 +97,8 @@ fun LauncherScreen(
         } else {
             rawFilteredApps.filter { app ->
                 app.category.uppercase().contains(selectedCategory) ||
-                (selectedCategory == catTools && (app.category.uppercase().contains("UTIL") || app.category.uppercase().contains("HERRAMIENTAS") || app.category.uppercase().contains("TOOL")))
+                (selectedCategory == catWork && app.category.uppercase().contains("TRABAJO")) ||
+                (selectedCategory == catFocus && app.category.uppercase().contains("UTIL"))
             }
         }
     }
@@ -99,7 +106,7 @@ fun LauncherScreen(
     val colors = LauncherTheme.colors
     val scale = state.appLabelTextScale
 
-    // Agrupación alfabética de aplicaciones
+    // Agrupación alfabética
     val groupedApps = remember(filteredApps) {
         filteredApps
             .groupBy { app ->
@@ -129,45 +136,9 @@ fun LauncherScreen(
                 .fillMaxSize()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // Header Minimalista
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.app_drawer_title),
-                        style = WarmMinimalistTypography.captionCaps.copy(fontFamily = activeFontFamily, fontSize = (11 * scale).sp),
-                        color = colors.accentPrimary
-                    )
-                    Text(
-                        text = stringResource(R.string.apps_available, filteredApps.size),
-                        style = WarmMinimalistTypography.microHint.copy(fontFamily = activeFontFamily, fontSize = (10 * scale).sp),
-                        color = colors.textSecondary
-                    )
-                }
-
-                if (filteredApps.any { it.isWorkProfile }) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = colors.chipBackground
-                    ) {
-                        Text(
-                            text = "MULTI-PROFILE",
-                            color = colors.textPrimary,
-                            style = WarmMinimalistTypography.microHint.copy(fontFamily = activeFontFamily),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-            }
-
-            // Campo de búsqueda
+            // Header Minimalista con Búsqueda
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.onSearchQueryChanged(it) },
@@ -189,22 +160,27 @@ fun LauncherScreen(
                     )
                 },
                 trailingIcon = {
-                    AnimatedVisibility(
-                        visible = searchQuery.isNotEmpty(),
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Limpiar búsqueda",
+                                    tint = colors.textSecondary
+                                )
+                            }
+                        } else {
                             Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Limpiar búsqueda",
-                                tint = colors.textSecondary
+                                imageVector = Icons.Outlined.Mic,
+                                contentDescription = "Voice Search",
+                                tint = colors.textSecondary,
+                                modifier = Modifier.padding(end = 12.dp).size(20.dp)
                             )
                         }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = CircleShape,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = colors.accentPrimary,
                     unfocusedBorderColor = colors.cardBorder,
@@ -217,14 +193,14 @@ fun LauncherScreen(
                 keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Quick-filter Category Chips
+            // Filter Chips Horizontal Tray
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 12.dp)
             ) {
                 items(
                     items = categories,
@@ -233,45 +209,190 @@ fun LauncherScreen(
                     val isSelected = selectedCategory == category
                     Surface(
                         shape = CircleShape,
-                        color = if (isSelected) colors.textPrimary else colors.chipBackground,
-                        border = if (isSelected) BorderStroke(1.dp, colors.textPrimary) else BorderStroke(1.dp, colors.cardBorder),
+                        color = if (isSelected) colors.accentPrimary else colors.surfaceVariant,
+                        border = if (isSelected) BorderStroke(1.dp, colors.accentPrimary) else BorderStroke(1.dp, colors.cardBorder),
                         modifier = Modifier.clickable { selectedCategory = category }
                     ) {
                         Text(
                             text = category,
-                            style = WarmMinimalistTypography.captionCaps.copy(fontFamily = activeFontFamily, fontSize = (11 * scale).sp),
-                            color = if (isSelected) colors.background else colors.textSecondary,
+                            style = WarmMinimalistTypography.labelSm.copy(fontFamily = activeFontFamily, fontSize = (11 * scale).sp),
+                            color = if (isSelected) colors.accentOnPrimary else colors.textSecondary,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            // Main Content Area
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("apps_lazy_column"),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 24.dp)
+            ) {
+                // Showing Frequent Apps and Mindful Card when search is empty
+                if (searchQuery.isBlank() && selectedCategory == catAll) {
+                    // Frequent / Predictive Apps Section
+                    item(key = "section_frequent") {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Box(modifier = Modifier.size(6.dp).background(colors.accentPrimary, CircleShape))
+                                    Text(
+                                        text = stringResource(R.string.frequent),
+                                        style = WarmMinimalistTypography.labelSm.copy(fontFamily = activeFontFamily),
+                                        color = colors.textSecondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.predictive),
+                                    style = WarmMinimalistTypography.labelSm.copy(fontFamily = activeFontFamily, fontSize = 9.sp),
+                                    color = colors.textMuted
+                                )
+                            }
 
-            // Lista agrupada alfabéticamente
-            if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 40.dp),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Text(
-                        text = stringResource(R.string.no_apps_found, searchQuery),
-                        color = colors.textSecondary,
-                        style = WarmMinimalistTypography.bodyRegular.copy(fontFamily = activeFontFamily, fontSize = (14 * scale).sp)
-                    )
+                            // 4-Column Grid for Frequent Apps
+                            val frequentList = state.mostUsedApps.take(4)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                frequentList.forEach { appInfo ->
+                                    val appItem = AppItem(
+                                        id = appInfo.packageName,
+                                        label = appInfo.label,
+                                        packageName = appInfo.packageName,
+                                        category = appInfo.category,
+                                        launchCount = appInfo.launchCount,
+                                        isWorkProfile = appInfo.isWorkProfile
+                                    )
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        FrequentAppGridTile(
+                                            app = appItem,
+                                            state = state,
+                                            fontFamily = activeFontFamily,
+                                            scale = scale,
+                                            onClick = {
+                                                val result = viewModel.launchAppWithResult(appInfo)
+                                                if (result !is LaunchResult.Success) {
+                                                    Toast.makeText(context, "Error al abrir ${appInfo.label}", Toast.LENGTH_SHORT).show()
+                                                }
+                                                onAppSelected?.invoke(appItem)
+                                            },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            }
+                                        )
+                                    }
+                                }
+                                // Fill remaining spaces if less than 4
+                                repeat(4 - frequentList.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+
+                    // Mindful Status Card
+                    item(key = "section_mindful_card") {
+                        Surface(
+                            color = colors.cardBackground,
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, colors.cardBorder),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(colors.surfaceVariant, RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Spa,
+                                        contentDescription = null,
+                                        tint = colors.accentPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.focus_mode_ready),
+                                            style = WarmMinimalistTypography.labelMd.copy(fontFamily = activeFontFamily),
+                                            color = colors.textPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Surface(
+                                            color = colors.surfaceVariant,
+                                            shape = CircleShape
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.eco_badge),
+                                                style = WarmMinimalistTypography.labelSm.copy(fontFamily = activeFontFamily, fontSize = 9.sp),
+                                                color = colors.accentPrimary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = stringResource(R.string.zero_unread_notifs),
+                                        style = WarmMinimalistTypography.bodySm.copy(fontFamily = activeFontFamily),
+                                        color = colors.textSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Outlined.CheckCircle,
+                                    contentDescription = null,
+                                    tint = colors.accentPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("apps_lazy_column"),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp)
-                ) {
+
+                // Alphabetical Catalog (4-Column Grid per letter)
+                if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
+                    item(key = "no_matches") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 40.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_apps_found, searchQuery),
+                                color = colors.textSecondary,
+                                style = WarmMinimalistTypography.bodyRegular.copy(fontFamily = activeFontFamily, fontSize = (14 * scale).sp)
+                            )
+                        }
+                    }
+                } else {
                     groupedApps.forEach { (letter, appsInLetter) ->
+                        // Letter Header Item
                         item(
                             key = "header_$letter",
                             contentType = "letter_header"
@@ -281,43 +402,57 @@ fun LauncherScreen(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 16.dp, bottom = 4.dp)
+                                    .padding(top = 8.dp, bottom = 4.dp)
                             ) {
                                 Text(
                                     text = letter.toString(),
-                                    style = WarmMinimalistTypography.titleMd.copy(fontFamily = activeFontFamily, fontSize = (18 * scale).sp),
-                                    color = colors.accentPrimary
+                                    style = WarmMinimalistTypography.titleMd.copy(fontFamily = activeFontFamily, fontSize = (16 * scale).sp),
+                                    color = colors.accentPrimary,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 HorizontalDivider(
-                                    color = colors.divider,
+                                    color = colors.cardBorder,
                                     thickness = 1.dp,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
                         }
 
+                        // App items rendered in 4-column rows
+                        val rows = appsInLetter.chunked(4)
                         items(
-                            items = appsInLetter,
-                            key = { it.id },
-                            contentType = { "app_list_item" }
-                        ) { appItem ->
-                            LauncherAppRow(
-                                app = appItem,
-                                accentColor = colors.accentPrimary,
-                                fontFamily = activeFontFamily,
-                                scale = scale,
-                                isMonochromatic = state.isZeroDistractions,
-                                onClick = {
-                                    val result = viewModel.launchAppWithResult(AppInfo.fromAppItem(appItem))
-                                    if (result !is LaunchResult.Success) {
-                                        Toast.makeText(context, "Error al abrir ${appItem.label}", Toast.LENGTH_SHORT).show()
+                            items = rows,
+                            key = { row -> "row_${letter}_${row.first().id}" }
+                        ) { appRow ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                appRow.forEach { appItem ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        AppGridTile(
+                                            app = appItem,
+                                            state = state,
+                                            fontFamily = activeFontFamily,
+                                            scale = scale,
+                                            onClick = {
+                                                val result = viewModel.launchAppWithResult(AppInfo.fromAppItem(appItem))
+                                                if (result !is LaunchResult.Success) {
+                                                    Toast.makeText(context, "Error al abrir ${appItem.label}", Toast.LENGTH_SHORT).show()
+                                                }
+                                                onAppSelected?.invoke(appItem)
+                                            },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            }
+                                        )
                                     }
-                                    onAppSelected?.invoke(appItem)
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
-                            )
+                                // Fill empty spaces if row has less than 4 items
+                                repeat(4 - appRow.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
@@ -326,26 +461,30 @@ fun LauncherScreen(
     }
 }
 
+/**
+ * Tile para la cuadrícula de 4 columnas de aplicaciones del cajón de Stitch.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LauncherAppRow(
+private fun AppGridTile(
     app: AppItem,
-    accentColor: Color,
+    state: LauncherState,
     fontFamily: FontFamily,
     scale: Float,
-    isMonochromatic: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onLongClick: () -> Unit
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     val colors = LauncherTheme.colors
+    val isMono = state.isZeroDistractions
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        Surface(
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .combinedClickable(
                     role = Role.Button,
                     onClickLabel = "Abrir ${app.label}",
@@ -356,75 +495,47 @@ private fun LauncherAppRow(
                         isMenuExpanded = true
                     }
                 )
-                .testTag("app_row_${app.packageName}"),
-            color = colors.surfaceElevated,
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, colors.cardBorder)
+                .padding(vertical = 4.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Squircle Container for Icon
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = colors.cardBackground,
+                border = BorderStroke(1.dp, colors.cardBorder),
+                modifier = Modifier.size(56.dp)
             ) {
-                AsyncAppIcon(
-                    app = app,
-                    size = 40.dp,
-                    accentColor = if (isMonochromatic) colors.textPrimary else accentColor
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = app.label,
-                        style = WarmMinimalistTypography.drawerRow.copy(fontFamily = fontFamily, fontSize = (16 * scale).sp),
-                        color = colors.textPrimary,
-                        maxLines = 1
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    AsyncAppIcon(
+                        app = app,
+                        size = 28.dp,
+                        accentColor = if (isMono) colors.textPrimary else colors.accentPrimary
                     )
                     if (app.isWorkProfile) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = colors.chipBackground
-                        ) {
-                            Text(
-                                text = "WORK",
-                                color = colors.textPrimary,
-                                style = WarmMinimalistTypography.microHint.copy(fontFamily = fontFamily),
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = app.category.uppercase(),
-                    style = WarmMinimalistTypography.captionCaps.copy(fontFamily = fontFamily, fontSize = (11 * scale).sp),
-                    color = colors.textMuted,
-                    maxLines = 1
-                )
-
-                if (app.launchCount > 0) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = colors.chipBackground
-                    ) {
-                        Text(
-                            text = "${app.launchCount}",
-                            style = TextStyle(
-                                fontFamily = fontFamily,
-                                fontSize = (10 * scale).sp,
-                                fontWeight = FontWeight.Bold,
-                                color = colors.textPrimary
-                            ),
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(colors.accentPrimary, CircleShape)
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-4).dp, y = 4.dp)
                         )
                     }
                 }
+            }
+
+            // App Label underneath
+            if (state.homeScreenElements.showMostUsedHeader) {
+                Text(
+                    text = app.label,
+                    style = WarmMinimalistTypography.labelSm.copy(fontFamily = fontFamily, fontSize = (11 * scale).sp),
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 
@@ -437,7 +548,7 @@ private fun LauncherAppRow(
         ) {
             DropdownMenuItem(
                 text = { Text("Info", style = WarmMinimalistTypography.bodyRegular.copy(fontFamily = fontFamily, fontSize = (13 * scale).sp), color = colors.textPrimary) },
-                leadingIcon = { Icon(Icons.Default.Info, contentDescription = null, tint = accentColor) },
+                leadingIcon = { Icon(Icons.Default.Info, contentDescription = null, tint = colors.accentPrimary) },
                 onClick = { isMenuExpanded = false }
             )
             DropdownMenuItem(
@@ -446,5 +557,90 @@ private fun LauncherAppRow(
                 onClick = { isMenuExpanded = false }
             )
         }
+    }
+}
+
+/**
+ * Tile especial para las aplicaciones frecuentes/predecibles (incluyendo Calendar tipo OCT 24).
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FrequentAppGridTile(
+    app: AppItem,
+    state: LauncherState,
+    fontFamily: FontFamily,
+    scale: Float,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    val isCalendar = app.packageName.contains("calendar", ignoreCase = true) || app.label.contains("calendar", ignoreCase = true) || app.label.contains("calendario", ignoreCase = true)
+    val colors = LauncherTheme.colors
+
+    if (isCalendar) {
+        val monthFormat = SimpleDateFormat("MMM", Locale.getDefault())
+        val dayFormat = SimpleDateFormat("dd", Locale.getDefault())
+        val currentDate = Date()
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onClick() }
+                .padding(vertical = 4.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = colors.cardBackground,
+                border = BorderStroke(1.dp, colors.cardBorder),
+                modifier = Modifier.size(56.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = monthFormat.format(currentDate).uppercase(),
+                        style = TextStyle(
+                            fontFamily = fontFamily,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.accentPrimary
+                        )
+                    )
+                    Text(
+                        text = dayFormat.format(currentDate),
+                        style = TextStyle(
+                            fontFamily = fontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Light,
+                            color = colors.textPrimary
+                        )
+                    )
+                }
+            }
+            if (state.homeScreenElements.showMostUsedHeader) {
+                Text(
+                    text = app.label,
+                    style = WarmMinimalistTypography.labelSm.copy(fontFamily = fontFamily, fontSize = (11 * scale).sp),
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    } else {
+        AppGridTile(
+            app = app,
+            state = state,
+            fontFamily = fontFamily,
+            scale = scale,
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
     }
 }
